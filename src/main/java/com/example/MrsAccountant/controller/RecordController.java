@@ -6,7 +6,6 @@ import com.example.mrsaccountant.security.CustomUserDetails;
 import com.example.mrsaccountant.service.RecordService;
 import com.example.mrsaccountant.service.UserService;
 
-
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +23,7 @@ public class RecordController {
         this.recordService = recordService;
         this.userService = userService;
     }
+
     // 返回用戶records根據年月日
     @GetMapping("/records")
     public ResponseEntity<?> getRecordsByUserId(
@@ -55,9 +55,19 @@ public class RecordController {
         User user = userService.getUserByEmail(userEmail);
         record.setUser(user);
         recordService.saveRecord(record);
-       
+
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body("Record added successfully!");
+    }
+
+    @DeleteMapping("/records/{id}")
+    public ResponseEntity<?> deleteRecord(@PathVariable("id") Long recordId,
+            @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+
+            recordService.deleteRecord(recordId);
+
+        return ResponseEntity.status(HttpStatus.ACCEPTED)
+                .body("Record deleted successfully!");
     }
 
 }

@@ -45,4 +45,8 @@ public class RecordService {
         recordRepository.save(record);
     }
 
+    public void deleteRecord(Long recordId){
+        recordRepository.deleteById(recordId);
+    }
+
 }
