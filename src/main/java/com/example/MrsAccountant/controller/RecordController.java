@@ -55,7 +55,7 @@ public class RecordController {
         User user = userService.getUserByEmail(userEmail);
         record.setUser(user);
         recordService.saveRecord(record);
-
+       
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body("Record added successfully!");
     }

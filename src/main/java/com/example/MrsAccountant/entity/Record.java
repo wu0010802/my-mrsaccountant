@@ -37,13 +37,13 @@ public class Record {
     // @Column(nullable = false)
     // private String note;
 
-    // @Column(name = "created_at", updatable = false)
-    // private LocalDateTime createdAt;
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
 
-    // @PrePersist
-    // protected void onCreate() {
-    //     createdAt = LocalDateTime.now();
-    // }
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 
 
     public Long getRecordId() {

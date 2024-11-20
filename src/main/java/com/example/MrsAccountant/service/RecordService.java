@@ -1,14 +1,9 @@
 package com.example.mrsaccountant.service;
 
 import java.util.List;
-
 import org.springframework.stereotype.Service;
-
 import com.example.mrsaccountant.entity.Record;
-import com.example.mrsaccountant.entity.User;
 import com.example.mrsaccountant.repository.RecordRepository;
-import com.example.mrsaccountant.repository.UserRepository;
-import java.util.Optional;
 import java.time.LocalDate;
 
 @Service
