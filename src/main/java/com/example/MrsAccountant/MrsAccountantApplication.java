@@ -1,4 +1,4 @@
-package com.example.MrsAccountant;
+package com.example.mrsaccountant;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -6,8 +6,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class MrsAccountantApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(MrsAccountantApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(MrsAccountantApplication.class, args);
+    }
 
+    
 }

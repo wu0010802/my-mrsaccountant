@@ -1,21 +1,25 @@
 package com.example.mrsaccountant.entity;
 
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "Record")
+@Table(name = "records")
 public class Record {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long recordId;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
+
+    @Column(nullable = false)
+    private String name;
 
     @Column(nullable = false)
     private Double amount;
@@ -27,26 +31,27 @@ public class Record {
     @Column(nullable = false)
     private LocalDate date;
 
+    @Column(nullable = false)
     private String category;
 
-    private String note;
+    // @Column(nullable = false)
+    // private String note;
 
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
+    // @Column(name = "created_at", updatable = false)
+    // private LocalDateTime createdAt;
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
-
+    // @PrePersist
+    // protected void onCreate() {
+    //     createdAt = LocalDateTime.now();
+    // }
 
 
     public Long getRecordId() {
-        return recordId;
+        return id;
     }
 
-    public void setRecordId(Long recordId) {
-        this.recordId = recordId;
+    public void setRecordId(Long id) {
+        this.id = id;
     }
 
     public User getUser() {
@@ -73,6 +78,14 @@ public class Record {
         this.type = type;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public LocalDate getDate() {
         return date;
     }
@@ -89,17 +102,17 @@ public class Record {
         this.category = category;
     }
 
-    public String getNote() {
-        return note;
-    }
+    // public String getNote() {
+    //     return note;
+    // }
 
-    public void setNote(String note) {
-        this.note = note;
-    }
+    // public void setNote(String note) {
+    //     this.note = note;
+    // }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
+    // public LocalDateTime getCreatedAt() {
+    //     return createdAt;
+    // }
 
     public enum Type {
         INCOME, EXPENSE

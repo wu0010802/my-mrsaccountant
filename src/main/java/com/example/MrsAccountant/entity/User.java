@@ -5,12 +5,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "users")  
+@Table(name = "users")
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long userId;
+    private Long id;
 
     @Column(nullable = false, unique = true)
     private String username;
@@ -21,36 +21,15 @@ public class User {
     @Column(unique = true)
     private String email;
 
-    // @Column(name = "currency_preference", nullable = false)
-    // private String currencyPreference = "USD";
-
-    // @Column(name = "created_at", updatable = false)
-    // private LocalDateTime createdAt;
-
-    // @Column(name = "updated_at")
-    // private LocalDateTime updatedAt;
-
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Record> records;
 
-    // @PrePersist
-    // protected void onCreate() {
-    //     createdAt = LocalDateTime.now();
-    //     updatedAt = LocalDateTime.now();
-    // }
-
-    // @PreUpdate
-    // protected void onUpdate() {
-    //     updatedAt = LocalDateTime.now();
-    // }
-
-
     public Long getUserId() {
-        return userId;
+        return id;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setUserId(Long id) {
+        this.id = id;
     }
 
     public String getUsername() {
@@ -77,27 +56,22 @@ public class User {
         this.email = email;
     }
 
-    // public String getCurrencyPreference() {
-    //     return currencyPreference;
-    // }
-
-    // public void setCurrencyPreference(String currencyPreference) {
-    //     this.currencyPreference = currencyPreference;
-    // }
-
-    // public LocalDateTime getCreatedAt() {
-    //     return createdAt;
-    // }
-
-    // public LocalDateTime getUpdatedAt() {
-    //     return updatedAt;
-    // }
-
     public List<Record> getRecords() {
         return records;
     }
 
     public void setRecords(List<Record> records) {
         this.records = records;
+    }
+
+   
+    public void addRecord(Record record) {
+        records.add(record);
+        record.setUser(this);
+    }
+
+    public void removeRecord(Record record) {
+        records.remove(record);
+        record.setUser(null);
     }
 }
