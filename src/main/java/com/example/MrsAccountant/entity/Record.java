@@ -3,7 +3,6 @@ package com.example.mrsaccountant.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "records")
@@ -33,18 +32,6 @@ public class Record {
 
     @Column(nullable = false)
     private String category;
-
-    // @Column(nullable = false)
-    // private String note;
-
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
-
 
     public Long getRecordId() {
         return id;
@@ -102,17 +89,6 @@ public class Record {
         this.category = category;
     }
 
-    // public String getNote() {
-    //     return note;
-    // }
-
-    // public void setNote(String note) {
-    //     this.note = note;
-    // }
-
-    // public LocalDateTime getCreatedAt() {
-    //     return createdAt;
-    // }
 
     public enum Type {
         INCOME, EXPENSE

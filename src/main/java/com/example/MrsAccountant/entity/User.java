@@ -1,8 +1,11 @@
 package com.example.mrsaccountant.entity;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "users")
@@ -20,6 +23,10 @@ public class User {
 
     @Column(unique = true)
     private String email;
+
+    @ManyToMany
+    @JoinTable(name = "user_group", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "group_id"))
+    Set<Group> belongGroups = new HashSet<>();;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Record> records;
@@ -56,6 +63,14 @@ public class User {
         this.email = email;
     }
 
+    public Set<Group> getGroup() {
+        return belongGroups;
+    }
+
+    public void setGroup(Set<Group> belongGroups) {
+        this.belongGroups = belongGroups;
+    }
+
     public List<Record> getRecords() {
         return records;
     }
@@ -64,7 +79,6 @@ public class User {
         this.records = records;
     }
 
-   
     public void addRecord(Record record) {
         records.add(record);
         record.setUser(this);
