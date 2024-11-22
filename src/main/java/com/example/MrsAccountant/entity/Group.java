@@ -2,6 +2,7 @@ package com.example.mrsaccountant.entity;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -25,6 +26,9 @@ public class Group {
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<GroupTransaction> groupTransactions;
 
     
     public Long getGroupId() {
@@ -59,5 +63,23 @@ public class Group {
     @PrePersist
     public void setCreateAt() {
         this.createdAt = LocalDateTime.now();
+    }
+
+    public List<GroupTransaction> getGroupTransactions() {
+        return groupTransactions;
+    }
+
+    public void setGroupTransactions(List<GroupTransaction> groupTransactions) {
+        this.groupTransactions = groupTransactions;
+    }
+
+    public void addGroupTransaction(GroupTransaction groupTransaction) {
+        groupTransactions.add(groupTransaction);
+        groupTransaction.setGroup(this);
+    }
+
+    public void removeRecord(GroupTransaction groupTransaction) {
+        groupTransactions.remove(groupTransaction);
+        groupTransaction.setGroup(null);
     }
 }

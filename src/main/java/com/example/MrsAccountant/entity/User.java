@@ -63,11 +63,11 @@ public class User {
         this.email = email;
     }
 
-    public Set<Group> getGroup() {
+    public Set<Group> getGroups() {
         return belongGroups;
     }
 
-    public void setGroup(Set<Group> belongGroups) {
+    public void setGroups(Set<Group> belongGroups) {
         this.belongGroups = belongGroups;
     }
 
