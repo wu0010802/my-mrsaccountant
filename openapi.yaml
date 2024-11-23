@@ -2,7 +2,9 @@ openapi: 3.0.1
 info:
   title: Online Order API
   version: 1.0.0
-  description: A basic API for working with Swagger tools, providing endpoints for managing user groups and records.
+  description: >
+    A basic API for working with Swagger tools, providing endpoints for managing
+    user groups and records, as well as user registration.
 paths:
   /mrsaccountant/user/groups:
     get:
@@ -10,7 +12,7 @@ paths:
       description: Fetches all groups associated with the authenticated user.
       operationId: getUserGroups
       responses:
-        200:
+        '200':
           description: A list of user groups.
           content:
             application/json:
@@ -53,7 +55,7 @@ paths:
               required:
                 - groupName
       responses:
-        201:
+        '201':
           description: Group created successfully.
           content:
             application/json:
@@ -78,7 +80,7 @@ paths:
           schema:
             type: integer
       responses:
-        200:
+        '200':
           description: Group deleted successfully.
           content:
             application/json:
@@ -103,7 +105,7 @@ paths:
           schema:
             type: string
       responses:
-        200:
+        '200':
           description: A list of user records.
           content:
             application/json:
@@ -121,6 +123,8 @@ paths:
                             "recordId": 1
                         }
                     ]
+        default:
+          description: An error occurred while retrieving records.
       tags:
         - Records
     post:
@@ -161,7 +165,7 @@ paths:
                 - date
                 - category
       responses:
-        201:
+        '201':
           description: Record added successfully.
           content:
             application/json:
@@ -174,8 +178,8 @@ paths:
         - Records
   /mrsaccountant/user/records/{id}:
     delete:
-      summary: Delete a record
-      description: Delete a record by its unique identifier.
+      summary: Delete a record by its unique identifier
+      description: Deletes a record by its unique identifier.
       operationId: deleteUserRecord
       parameters:
         - name: id
@@ -185,7 +189,7 @@ paths:
           schema:
             type: integer
       responses:
-        202:
+        '202':
           description: Record deleted successfully.
           content:
             application/json:
@@ -196,3 +200,40 @@ paths:
           description: An error occurred while deleting the record.
       tags:
         - Records
+  /auth/register:
+    post:
+      summary: Register a new user account
+      description: Allows a user to register a new account using an email, username, and password.
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: The user's email address.
+                username:
+                  type: string
+                  description: The desired username for the account.
+                password:
+                  type: string
+                  description: The desired password for the account.
+              required:
+                - email
+                - username
+                - password
+      responses:
+        '201':
+          description: User registered successfully.
+          content:
+            application/json:
+              schema:
+                type: string
+                example: User registered successfully!
+        default:
+          description: An error occurred while registering the user.
+      tags:
+        - Authentication
