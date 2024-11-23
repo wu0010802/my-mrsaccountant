@@ -1,6 +1,8 @@
 package com.example.mrsaccountant.entity;
 
 import jakarta.persistence.*;
+
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -26,7 +28,10 @@ public class User {
 
     @ManyToMany
     @JoinTable(name = "user_group", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "group_id"))
-    Set<Group> belongGroups = new HashSet<>();;
+    Set<Group> belongGroups = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TransactionSplit> transactionSplits = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Record> records;
@@ -87,5 +92,15 @@ public class User {
     public void removeRecord(Record record) {
         records.remove(record);
         record.setUser(null);
+    }
+
+    public void addTransactionSplit(TransactionSplit split) {
+        transactionSplits.add(split);
+        split.setUser(this);
+    }
+
+    public void removeTransactionSplit(TransactionSplit split) {
+        transactionSplits.remove(split);
+        split.setUser(null);
     }
 }

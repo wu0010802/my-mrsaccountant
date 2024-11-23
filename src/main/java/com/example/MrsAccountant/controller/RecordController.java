@@ -25,7 +25,7 @@ public class RecordController {
     }
 
     // 返回用戶records根據年月日
-    @GetMapping("/records")
+    @GetMapping("/user/records")
     public ResponseEntity<?> getRecordsByUserId(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestParam(required = false) String datetype) {
@@ -46,7 +46,7 @@ public class RecordController {
         return ResponseEntity.ok(records);
     }
 
-    @PostMapping("/records")
+    @PostMapping("/user/records")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<?> addRecord(@RequestBody Record record,
             @AuthenticationPrincipal CustomUserDetails customUserDetails) {
@@ -60,7 +60,7 @@ public class RecordController {
                 .body("Record added successfully!");
     }
 
-    @DeleteMapping("/records/{id}")
+    @DeleteMapping("/user/records/{id}")
     public ResponseEntity<?> deleteRecord(@PathVariable("id") Long recordId,
             @AuthenticationPrincipal CustomUserDetails customUserDetails) {
 

@@ -1,0 +1,198 @@
+openapi: 3.0.1
+info:
+  title: Online Order API
+  version: 1.0.0
+  description: A basic API for working with Swagger tools, providing endpoints for managing user groups and records.
+paths:
+  /mrsaccountant/user/groups:
+    get:
+      summary: Retrieve all groups for the authenticated user
+      description: Fetches all groups associated with the authenticated user.
+      operationId: getUserGroups
+      responses:
+        200:
+          description: A list of user groups.
+          content:
+            application/json:
+              examples:
+                userAllGroups:
+                  summary: Sample response
+                  value: |
+                    [
+                        {
+                            "groupName": "Marketing Team",
+                            "createdAt": "2024-11-21",
+                            "groupTransactions": [],
+                            "groupId": 2
+                        },
+                        {
+                            "groupName": "Test Group",
+                            "createdAt": "2024-11-21",
+                            "groupTransactions": [],
+                            "groupId": 6
+                        }
+                    ]
+        default:
+          description: An error occurred while retrieving user groups.
+      tags:
+        - User Groups
+    post:
+      summary: Create a new group for the authenticated user
+      description: Adds a new group to the authenticated user's account.
+      operationId: createUserGroup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                groupName:
+                  type: string
+                  description: The name of the new group.
+              required:
+                - groupName
+      responses:
+        201:
+          description: Group created successfully.
+          content:
+            application/json:
+              examples:
+                userAddGroupResponse:
+                  summary: Sample response
+                  value: Record added successfully!
+        default:
+          description: An error occurred while creating the group.
+      tags:
+        - User Groups
+  /user/groups/{groupId}:
+    delete:
+      summary: Delete a group by its ID
+      description: Deletes a user group specified by its unique ID.
+      operationId: deleteUserGroup
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          description: The unique identifier of the group to delete.
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Group deleted successfully.
+          content:
+            application/json:
+              examples:
+                deleteGroup:
+                  summary: Sample response
+                  value: Group deleted successfully!
+        default:
+          description: An error occurred while deleting the group.
+      tags:
+        - User Groups
+  /mrsaccountant/user/records:
+    get:
+      summary: Get user records
+      description: Fetch user records by date type or all records if no date type is provided.
+      operationId: getUserRecords
+      parameters:
+        - name: datetype
+          in: query
+          required: false
+          description: The date type for filtering records (e.g., year, month, day).
+          schema:
+            type: string
+      responses:
+        200:
+          description: A list of user records.
+          content:
+            application/json:
+              examples:
+                userRecords:
+                  summary: Sample response
+                  value: |
+                    [
+                        {
+                            "name": "Groceries",
+                            "amount": 150.5,
+                            "type": "EXPENSE",
+                            "date": "2024-11-22",
+                            "category": "test5",
+                            "recordId": 1
+                        }
+                    ]
+      tags:
+        - Records
+    post:
+      summary: Add a new record
+      description: Add a new record for the authenticated user.
+      operationId: addUserRecord
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: The name of the record (e.g., item or expense/income name).
+                amount:
+                  type: number
+                  format: double
+                  description: The monetary amount of the record.
+                type:
+                  type: string
+                  description: The type of the record, either `INCOME` or `EXPENSE`.
+                  enum:
+                    - INCOME
+                    - EXPENSE
+                date:
+                  type: string
+                  format: date
+                  description: The date associated with the record (e.g., transaction date).
+                category:
+                  type: string
+                  description: The category of the record (e.g., Food, Travel, Salary).
+              required:
+                - name
+                - amount
+                - type
+                - date
+                - category
+      responses:
+        201:
+          description: Record added successfully.
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Record added successfully!
+        default:
+          description: An error occurred while adding the record.
+      tags:
+        - Records
+  /mrsaccountant/user/records/{id}:
+    delete:
+      summary: Delete a record
+      description: Delete a record by its unique identifier.
+      operationId: deleteUserRecord
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The unique identifier of the record to delete.
+          schema:
+            type: integer
+      responses:
+        202:
+          description: Record deleted successfully.
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Record deleted successfully!
+        default:
+          description: An error occurred while deleting the record.
+      tags:
+        - Records
