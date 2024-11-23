@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  app:
+    image: openjdk:17-jdk-alpine
+    container_name: mrsaccountant-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/mrsaccountant
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      - db
+    ports:
+      - "8080:8080" 
+    networks:
+      - mrsaccountant-network
+
+  db:
+    image: postgres:15
+    container_name: mrsaccountant-db
+    environment:
+      POSTGRES_DB: mrsaccountant
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - mrsaccountant-network
+
+volumes:
+  db-data:
+
+networks:
+  mrsaccountant-network:
