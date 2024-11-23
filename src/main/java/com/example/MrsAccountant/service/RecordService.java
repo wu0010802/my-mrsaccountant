@@ -7,7 +7,8 @@ import com.example.mrsaccountant.repository.RecordRepository;
 import java.time.LocalDate;
 
 @Service
-public class RecordService {
+public class 
+RecordService {
 
     private final RecordRepository recordRepository;
 
@@ -23,20 +24,8 @@ public class RecordService {
         return recordRepository.findByUserId(id);
     }
 
-    public List<Record> findRecordsByUserIdAndDateType(Long userId, String dateType) {
-        LocalDate startDate;
-        LocalDate endDate;
-
-        if ("year".equals(dateType)) {
-            startDate = LocalDate.of(LocalDate.now().getYear(), 1, 1);
-            endDate = LocalDate.of(LocalDate.now().getYear(), 12, 31);
-        } else if ("month".equals(dateType)) {
-            startDate = LocalDate.now().withDayOfMonth(1);
-            endDate = LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth());
-        } else {
-            startDate = LocalDate.now();
-            endDate = LocalDate.now();
-        }
+    public List<Record> findRecordsByUserIdAndDateType(Long userId, String startDate,String endDate) {
+    
 
         return recordRepository.findByUserIdAndDateBetween(userId, startDate, endDate);
     }

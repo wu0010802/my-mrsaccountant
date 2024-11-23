@@ -46,7 +46,7 @@ public class GroupTransaction {
     private String category;
 
     @Column(nullable = false)
-    private LocalDate date;
+    private String date;
 
     @Column(nullable = false)
     private String name;
@@ -95,11 +95,11 @@ public class GroupTransaction {
         this.category = category;
     }
 
-    public LocalDate getDate() {
+    public String getDate() {
         return date;
     }
 
-    public void setDate(LocalDate date) {
+    public void setDate(String date) {
         this.date = date;
     }
 

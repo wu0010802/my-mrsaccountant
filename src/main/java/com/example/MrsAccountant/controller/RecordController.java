@@ -24,20 +24,21 @@ public class RecordController {
         this.userService = userService;
     }
 
-    // 返回用戶records根據年月日
+  
     @GetMapping("/user/records")
     public ResponseEntity<?> getRecordsByUserId(
-            @AuthenticationPrincipal CustomUserDetails customUserDetails,
-            @RequestParam(required = false) String datetype) {
+        @AuthenticationPrincipal CustomUserDetails customUserDetails,
+        @RequestParam(required = false) String startdate, 
+        @RequestParam(required = false) String enddate){
         String userEmail = customUserDetails.getUsername();
 
         User user = userService.getUserByEmail(userEmail);
 
         List<Record> records;
 
-        if (datetype != null) {
+        if (startdate != null || enddate != null) {
 
-            records = recordService.findRecordsByUserIdAndDateType(user.getUserId(), datetype);
+            records = recordService.findRecordsByUserIdAndDateType(user.getUserId(),startdate,enddate );
         } else {
 
             records = recordService.findRecordsByUserId(user.getUserId());

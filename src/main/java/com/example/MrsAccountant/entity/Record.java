@@ -2,7 +2,6 @@ package com.example.mrsaccountant.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import java.time.LocalDate;
 
 @Entity
 @Table(name = "records")
@@ -28,7 +27,7 @@ public class Record {
     private Type type;
 
     @Column(nullable = false)
-    private LocalDate date;
+    private String date;
 
     @Column(nullable = false)
     private String category;
@@ -73,11 +72,11 @@ public class Record {
         this.name = name;
     }
 
-    public LocalDate getDate() {
+    public String getDate() {
         return date;
     }
 
-    public void setDate(LocalDate date) {
+    public void setDate(String date) {
         this.date = date;
     }
 

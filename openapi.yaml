@@ -95,9 +95,23 @@ paths:
   /mrsaccountant/user/records:
     get:
       summary: Get user records
-      description: Fetch user records by date type or all records if no date type is provided.
+      description: Fetch user records by date range or all records if no date range is provided.
       operationId: getUserRecords
       parameters:
+        - name: startdate
+          in: query
+          required: false
+          description: The start date for filtering records (format: yyyy-MM-dd).
+          schema:
+            type: string
+            format: date
+        - name: enddate
+          in: query
+          required: false
+          description: The end date for filtering records (format: yyyy-MM-dd).
+          schema:
+            type: string
+            format: date
         - name: datetype
           in: query
           required: false
