@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.mrsaccountant.entity.Group;
 import com.example.mrsaccountant.entity.User;
-import com.example.mrsaccountant.security.CustomUserDetails;
+// import com.example.mrsaccountant.security.CustomUserDetails;
 import com.example.mrsaccountant.service.UserService;
 
 @RestController
@@ -29,11 +29,11 @@ public class UserController {
     }
 
     @GetMapping("/user/groups")
-    public ResponseEntity<?> getGroups(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
+    public ResponseEntity<?> getGroups(@AuthenticationPrincipal Long userId) {
 
-        String userEmail = customUserDetails.getUsername();
+        
 
-        User user = userService.getUserByEmail(userEmail);
+        User user = userService.getUserById(userId);
 
         Set<Group> groups = user.getGroups();
 
@@ -47,11 +47,11 @@ public class UserController {
     @PostMapping("/user/groups")
     public ResponseEntity<?> addGroup(
         @RequestBody Group group,
-        @AuthenticationPrincipal CustomUserDetails customUserDetails
+        @AuthenticationPrincipal Long userId
     ) {
         try {
-            String userEmail = customUserDetails.getUsername();
-            User user = userService.getUserByEmail(userEmail);
+           
+            User user = userService.getUserById(userId);
     
             // 驗證群組資料是否有效
             if (group == null || group.getGroupName() == null || group.getGroupName().isEmpty()) {
@@ -72,11 +72,11 @@ public class UserController {
 
     @DeleteMapping("/user/groups/{groupId}")
     public ResponseEntity<?> deleteGroup(@PathVariable("groupId") Long groupId,
-            @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+            @AuthenticationPrincipal Long userId) {
 
-        String userEmail = customUserDetails.getUsername();
+      
 
-        User user = userService.getUserByEmail(userEmail);
+        User user = userService.getUserById(userId);
 
         userService.removeGroupFromUser(user.getUserId(),groupId);
 

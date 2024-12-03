@@ -22,11 +22,15 @@ public class UserService {
         this.groupRespository = groupRespository;
     }
 
-    public User getUserByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("找不到電子郵件為 " + email + " 的用戶"));
+
+
+    public User getUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("找不到UserId " + userId + " 的用戶"));
 
     }
+
+
 
     public void addGroup(Group group, User user) {
         

@@ -7,7 +7,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "users")
@@ -20,21 +19,24 @@ public class User {
     @Column(nullable = false, unique = true)
     private String username;
 
-    @Column(nullable = false)
-    private String password;
+    // private String password;
+
+    // @Column(unique = true)
+    // private String email;
 
     @Column(unique = true)
-    private String email;
+    private String lineId; 
 
     @ManyToMany
     @JoinTable(name = "user_group", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "group_id"))
-    Set<Group> belongGroups = new HashSet<>();
+    private Set<Group> belongGroups = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TransactionSplit> transactionSplits = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Record> records;
+
 
     public Long getUserId() {
         return id;
@@ -52,20 +54,28 @@ public class User {
         this.username = username;
     }
 
-    public String getPassword() {
-        return password;
+    // public String getPassword() {
+    //     return password;
+    // }
+
+    // public void setPassword(String password) {
+    //     this.password = password;
+    // }
+
+    // public String getEmail() {
+    //     return email;
+    // }
+
+    // public void setEmail(String email) {
+    //     this.email = email;
+    // }
+
+    public String getLineId() {
+        return lineId;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
+    public void setLineId(String lineId) {
+        this.lineId = lineId;
     }
 
     public Set<Group> getGroups() {
@@ -104,3 +114,4 @@ public class User {
         split.setUser(null);
     }
 }
+

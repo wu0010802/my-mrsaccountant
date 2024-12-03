@@ -4,8 +4,16 @@ info:
   version: 1.0.0
   description: >
     A basic API for working with Swagger tools, providing endpoints for managing
-    user groups and records, as well as user registration.
+    user groups and records, as well as user registration and LINE login.
 paths:
+  components:
+    securitySchemes:
+      BearerAuth:
+        type: http
+        scheme: bearer
+        bearerFormat: JWT
+  security:
+    - BearerAuth: []
   /mrsaccountant/user/groups:
     get:
       summary: Retrieve all groups for the authenticated user
@@ -34,6 +42,8 @@ paths:
                             "groupId": 6
                         }
                     ]
+        '204':
+          description: No groups found for the user.
         default:
           description: An error occurred while retrieving user groups.
       tags:
@@ -59,10 +69,11 @@ paths:
           description: Group created successfully.
           content:
             application/json:
-              examples:
-                userAddGroupResponse:
-                  summary: Sample response
-                  value: Record added successfully!
+              schema:
+                type: string
+                example: Group added successfully!
+        '400':
+          description: Invalid group data provided.
         default:
           description: An error occurred while creating the group.
       tags:
@@ -80,14 +91,15 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        '202':
           description: Group deleted successfully.
           content:
             application/json:
-              examples:
-                deleteGroup:
-                  summary: Sample response
-                  value: Group deleted successfully!
+              schema:
+                type: string
+                example: Group deleted successfully!
+        '404':
+          description: Group not found.
         default:
           description: An error occurred while deleting the group.
       tags:
@@ -112,12 +124,6 @@ paths:
           schema:
             type: string
             format: date
-        - name: datetype
-          in: query
-          required: false
-          description: The date type for filtering records (e.g., year, month, day).
-          schema:
-            type: string
       responses:
         '200':
           description: A list of user records.
@@ -186,6 +192,8 @@ paths:
               schema:
                 type: string
                 example: Record added successfully!
+        '400':
+          description: Invalid record data provided.
         default:
           description: An error occurred while adding the record.
       tags:
@@ -210,44 +218,45 @@ paths:
               schema:
                 type: string
                 example: Record deleted successfully!
+        '404':
+          description: Record not found.
         default:
           description: An error occurred while deleting the record.
       tags:
         - Records
-  /auth/register:
+  /auth/line:
     post:
-      summary: Register a new user account
-      description: Allows a user to register a new account using an email, username, and password.
-      operationId: register
+      summary: LINE login for user authentication
+      description: Allows a user to log in using their LINE account and receive a JWT token.
+      operationId: lineLogin
       requestBody:
         required: true
         content:
-          application/json:
+          application/x-www-form-urlencoded:
             schema:
               type: object
               properties:
-                email:
+                idToken:
                   type: string
-                  description: The user's email address.
-                username:
-                  type: string
-                  description: The desired username for the account.
-                password:
-                  type: string
-                  description: The desired password for the account.
+                  description: The LINE ID token for authentication.
               required:
-                - email
-                - username
-                - password
+                - idToken
       responses:
-        '201':
-          description: User registered successfully.
+        '200':
+          description: User authenticated successfully.
           content:
             application/json:
-              schema:
-                type: string
-                example: User registered successfully!
-        default:
-          description: An error occurred while registering the user.
+              examples:
+                lineLoginSuccess:
+                  summary: Sample response
+                  value: |
+                    {
+                        "jwt": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                        "userId": "JohnDoe"
+                    }
+        '400':
+          description: Invalid LINE ID token provided.
+        '500':
+          description: An unexpected error occurred.
       tags:
         - Authentication

@@ -20,6 +20,7 @@ public class Group {
     @Column(nullable = false)
     private String groupName;
 
+
     @ManyToMany(mappedBy = "belongGroups")
     @JsonIgnore
     private Set<User> belongUsers = new HashSet<>(); 
