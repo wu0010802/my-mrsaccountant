@@ -3,14 +3,13 @@ package com.example.mrsaccountant.controller;
 import com.example.mrsaccountant.entity.User;
 import com.example.mrsaccountant.repository.UserRepository;
 import com.example.mrsaccountant.util.JwtUtil;
+import com.example.mrsaccountant.util.LineSigningKeyResolver;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
 
@@ -31,24 +30,22 @@ public class LineLoginController {
     public ResponseEntity<?> lineLogin(@RequestParam String idToken) {
 
         Claims claims = Jwts.parserBuilder()
+                .setSigningKeyResolver(new LineSigningKeyResolver())
                 .build()
-                .parseClaimsJwt(idToken.substring(0, idToken.lastIndexOf('.') + 1)) // 不驗證簽名
+                .parseClaimsJws(idToken)
                 .getBody();
 
-        String lineId =claims.get("aud", String.class);
+        String lineId = claims.get("aud", String.class);
         String displayName = claims.get("name", String.class);
 
-        // 查詢或創建用戶
         User user = userRepository.findByLineId(lineId).orElse(new User());
         user.setLineId(lineId);
         user.setUsername(displayName);
 
         userRepository.save(user);
 
-        // 生成 JWT Token
         String jwt = jwtUtil.generateToken(user.getUserId().toString());
 
-        // 返回響應
         return ResponseEntity.ok(Map.of("jwt", jwt, "userId", user.getUsername()));
     }
 }
