@@ -1,6 +1,5 @@
 package com.example.mrsaccountant.service;
 
-
 import org.springframework.stereotype.Service;
 
 import com.example.mrsaccountant.entity.Group;
@@ -13,6 +12,7 @@ import com.example.mrsaccountant.repository.UserRepository;
 import jakarta.transaction.Transactional;
 
 @Service
+@Transactional
 public class GroupService {
     private final GroupRespository groupRespository;
 
@@ -26,23 +26,20 @@ public class GroupService {
         this.userRepository = userRepository;
     }
 
-
-    public Group getGroupByGroupId(Long groupId){
+    public Group getGroupByGroupId(Long groupId) {
         return groupRespository.findById(groupId).orElse(null);
     }
-    public void addGroup(Group group, User user) {
 
+    public void addGroup(Group group, User user) {
         if (user.getGroups().stream().anyMatch(g -> g.getGroupName().equals(group.getGroupName()))) {
             throw new IllegalArgumentException("The group is already associated with the user");
         }
 
-        Group savedGroup = groupRespository.save(group);
-        user.getGroups().add(savedGroup);
-        userRepository.save(user);
-
+        user.getGroups().add(group); 
+        userRepository.save(user); 
     }
 
-    @Transactional
+    
     public void removeGroupFromUser(Long userId, Long groupId) {
 
         User user = userRepository.findById(userId)

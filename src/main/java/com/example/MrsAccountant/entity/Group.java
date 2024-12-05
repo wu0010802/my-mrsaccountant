@@ -83,4 +83,13 @@ public class Group {
         groupTransactions.remove(groupTransaction);
         groupTransaction.setGroup(null);
     }
+
+    public void addUser(User user) {
+        if (this.belongUsers == null) {
+            this.belongUsers = new HashSet<>();
+        }
+        this.belongUsers.add(user);
+        user.getGroups().add(this);
+    }
+    
 }

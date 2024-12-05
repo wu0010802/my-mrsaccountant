@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.mrsaccountant.entity.Group;
@@ -64,6 +65,29 @@ public class GroupController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("An unexpected error occurred");
+        }
+    }
+
+    @PostMapping("/group/user/{userId}/{groupId}")
+    public ResponseEntity<?> addUserToGroup(@PathVariable("userId") Long userId,
+            @PathVariable("groupId") Long groupId) {
+        try {
+            User addedUser = userService.getUserById(userId);
+            if (addedUser == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found with ID: " + userId);
+            }
+
+            Group addedGroup = groupService.getGroupByGroupId(groupId);
+            if (addedGroup == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Group not found with ID: " + groupId);
+            }
+
+            groupService.addGroup(addedGroup, addedUser);
+            return ResponseEntity.ok("User successfully added to the group.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
         }
     }
 
