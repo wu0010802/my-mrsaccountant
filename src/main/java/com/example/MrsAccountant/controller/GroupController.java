@@ -1,6 +1,9 @@
 package com.example.mrsaccountant.controller;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,7 +14,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.mrsaccountant.entity.Group;
@@ -43,6 +45,23 @@ public class GroupController {
         }
 
         return ResponseEntity.ok(groups);
+    }
+
+    @GetMapping("/group/users/{groupId}")
+    public ResponseEntity<?> getGroupUsers(@PathVariable("groupId") Long groupId) {
+        Group retriveGroup = groupService.getGroupByGroupId(groupId);
+        Set<User> userInGroup = retriveGroup.getBelongUsers();
+
+        Set<Map<String, Object>> responseUsers = userInGroup.stream()
+                .map(user -> {
+                    Map<String, Object> userMap = new HashMap<>();
+                    userMap.put("userId", user.getUserId());
+                    userMap.put("username", user.getUsername());
+                    return userMap;
+                })
+                .collect(Collectors.toSet());
+
+        return ResponseEntity.ok(responseUsers);
     }
 
     @PostMapping("/user/groups")

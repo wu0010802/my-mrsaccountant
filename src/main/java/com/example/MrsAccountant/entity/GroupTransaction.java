@@ -2,6 +2,7 @@ package com.example.mrsaccountant.entity;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Id;
@@ -17,7 +18,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import java.util.*;
 
 @Entity
 @Table(name = "group_transaction")
@@ -109,6 +109,14 @@ public class GroupTransaction {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public List<TransactionSplit> getTransactionSplits() {
+        return transactionSplits;
+    }
+
+    public void setTransactionSplits(List<TransactionSplit> transactionSplits) {
+        this.transactionSplits = transactionSplits;
     }
 
     public void addTransactionSplit(TransactionSplit split) {

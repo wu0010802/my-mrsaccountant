@@ -3,17 +3,19 @@ info:
   title: Online Order API
   version: 1.0.0
   description: >
-    A basic API for working with Swagger tools, providing endpoints for managing
-    user groups and records, as well as user registration and LINE login.
+    A basic API for managing user groups, records, user registration, and LINE login.
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []
+
 paths:
-  components:
-    securitySchemes:
-      BearerAuth:
-        type: http
-        scheme: bearer
-        bearerFormat: JWT
-  security:
-    - BearerAuth: []
   /mrsaccountant/user/groups:
     get:
       summary: Retrieve all groups for the authenticated user
@@ -27,21 +29,15 @@ paths:
               examples:
                 userAllGroups:
                   summary: Sample response
-                  value: |
-                    [
-                        {
-                            "groupName": "Marketing Team",
-                            "createdAt": "2024-11-21",
-                            "groupTransactions": [],
-                            "groupId": 2
-                        },
-                        {
-                            "groupName": "Test Group",
-                            "createdAt": "2024-11-21",
-                            "groupTransactions": [],
-                            "groupId": 6
-                        }
-                    ]
+                  value:
+                    - groupName: Marketing Team
+                      createdAt: "2024-11-21"
+                      groupTransactions: []
+                      groupId: 2
+                    - groupName: Test Group
+                      createdAt: "2024-11-21"
+                      groupTransactions: []
+                      groupId: 6
         '204':
           description: No groups found for the user.
         default:
@@ -78,185 +74,143 @@ paths:
           description: An error occurred while creating the group.
       tags:
         - User Groups
-  /user/groups/{groupId}:
-    delete:
-      summary: Delete a group by its ID
-      description: Deletes a user group specified by its unique ID.
-      operationId: deleteUserGroup
+
+  /group/user/{userId}/{groupId}:
+    post:
+      summary: Add a user to a group
+      description: Adds a user to a specific group by their IDs.
       parameters:
+        - name: userId
+          in: path
+          required: true
+          description: ID of the user to be added to the group
+          schema:
+            type: integer
         - name: groupId
           in: path
           required: true
-          description: The unique identifier of the group to delete.
+          description: ID of the group to which the user will be added
           schema:
             type: integer
       responses:
-        '202':
-          description: Group deleted successfully.
+        '200':
+          description: User successfully added to the group
           content:
             application/json:
               schema:
                 type: string
-                example: Group deleted successfully!
-        '404':
-          description: Group not found.
-        default:
-          description: An error occurred while deleting the group.
-      tags:
-        - User Groups
-  /mrsaccountant/user/records:
-    get:
-      summary: Get user records
-      description: Fetch user records by date range or all records if no date range is provided.
-      operationId: getUserRecords
-      parameters:
-        - name: startdate
-          in: query
-          required: false
-          description: The start date for filtering records (format: yyyy-MM-dd).
-          schema:
-            type: string
-            format: date
-        - name: enddate
-          in: query
-          required: false
-          description: The end date for filtering records (format: yyyy-MM-dd).
-          schema:
-            type: string
-            format: date
-      responses:
-        '200':
-          description: A list of user records.
+                example: "User successfully added to the group."
+        '400':
+          description: Invalid input
           content:
             application/json:
-              examples:
-                userRecords:
-                  summary: Sample response
-                  value: |
-                    [
-                        {
-                            "name": "Groceries",
-                            "amount": 150.5,
-                            "type": "EXPENSE",
-                            "date": "2024-11-22",
-                            "category": "test5",
-                            "recordId": 1
-                        }
-                    ]
-        default:
-          description: An error occurred while retrieving records.
+              schema:
+                type: string
+                example: "Invalid input data"
+        '404':
+          description: User or Group not found
+          content:
+            application/json:
+              schema:
+                type: string
+                examples:
+                  UserNotFound:
+                    summary: User not found
+                    value: "User not found with ID: {userId}"
+                  GroupNotFound:
+                    summary: Group not found
+                    value: "Group not found with ID: {groupId}"
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "An unexpected error occurred."
       tags:
-        - Records
+        - User Management
+
+  /group/transaction/{groupId}:
     post:
-      summary: Add a new record
-      description: Add a new record for the authenticated user.
-      operationId: addUserRecord
+      summary: Create a new group transaction
+      description: Creates a transaction for the specified group with transaction splits.
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          description: The ID of the group for which the transaction is being created
+          schema:
+            type: integer
       requestBody:
         required: true
+        description: Details of the group transaction to be created
         content:
           application/json:
             schema:
               type: object
               properties:
-                name:
-                  type: string
-                  description: The name of the record (e.g., item or expense/income name).
                 amount:
                   type: number
-                  format: double
-                  description: The monetary amount of the record.
+                  description: Total amount of the transaction
+                  example: 1500.0
                 type:
                   type: string
-                  description: The type of the record, either `INCOME` or `EXPENSE`.
-                  enum:
-                    - INCOME
-                    - EXPENSE
+                  description: Type of the transaction (e.g., EXPENSE, INCOME, TRANSFER)
+                  example: EXPENSE
+                category:
+                  type: string
+                  description: Category of the transaction (e.g., Food, Travel)
+                  example: Food
                 date:
                   type: string
                   format: date
-                  description: The date associated with the record (e.g., transaction date).
-                category:
+                  description: Date of the transaction in YYYY-MM-DD format
+                  example: 2024-12-05
+                name:
                   type: string
-                  description: The category of the record (e.g., Food, Travel, Salary).
-              required:
-                - name
-                - amount
-                - type
-                - date
-                - category
-      responses:
-        '201':
-          description: Record added successfully.
-          content:
-            application/json:
-              schema:
-                type: string
-                example: Record added successfully!
-        '400':
-          description: Invalid record data provided.
-        default:
-          description: An error occurred while adding the record.
-      tags:
-        - Records
-  /mrsaccountant/user/records/{id}:
-    delete:
-      summary: Delete a record by its unique identifier
-      description: Deletes a record by its unique identifier.
-      operationId: deleteUserRecord
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: The unique identifier of the record to delete.
-          schema:
-            type: integer
-      responses:
-        '202':
-          description: Record deleted successfully.
-          content:
-            application/json:
-              schema:
-                type: string
-                example: Record deleted successfully!
-        '404':
-          description: Record not found.
-        default:
-          description: An error occurred while deleting the record.
-      tags:
-        - Records
-  /auth/line:
-    post:
-      summary: LINE login for user authentication
-      description: Allows a user to log in using their LINE account and receive a JWT token.
-      operationId: lineLogin
-      requestBody:
-        required: true
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                idToken:
-                  type: string
-                  description: The LINE ID token for authentication.
-              required:
-                - idToken
+                  description: Name or description of the transaction
+                  example: Dinner with friends
+                transactionSplits:
+                  type: array
+                  description: List of transaction splits associated with the group transaction
+                  items:
+                    type: object
+                    properties:
+                      userId:
+                        type: integer
+                        description: ID of the user associated with the split
+                        example: 1
+                      amount:
+                        type: number
+                        description: Amount allocated to the user
+                        example: 750.0
+                      role:
+                        type: string
+                        description: Role of the user in the transaction (e.g., PAYER, RECEIVER)
+                        example: PAYER
       responses:
         '200':
-          description: User authenticated successfully.
+          description: GroupTransaction created successfully
+        '400':
+          description: Invalid data provided
           content:
             application/json:
-              examples:
-                lineLoginSuccess:
-                  summary: Sample response
-                  value: |
-                    {
-                        "jwt": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-                        "userId": "JohnDoe"
-                    }
-        '400':
-          description: Invalid LINE ID token provided.
+              schema:
+                type: string
+                example: "Invalid data: {error message}"
+        '404':
+          description: Group not found
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "Group not found with ID: {groupId}"
         '500':
-          description: An unexpected error occurred.
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "Failed to create GroupTransaction."
       tags:
-        - Authentication
+        - Transactions

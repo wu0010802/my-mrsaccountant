@@ -1,6 +1,7 @@
 package com.example.mrsaccountant.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -82,5 +83,4 @@ public class TransactionSplit {
         this.role = role;
     }
 
-  
 }
