@@ -1,7 +1,6 @@
 package com.example.mrsaccountant.controller;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,12 +13,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.mrsaccountant.dto.GroupTransactionDTO;
-import com.example.mrsaccountant.entity.Group;
 import com.example.mrsaccountant.entity.GroupTransaction;
-import com.example.mrsaccountant.entity.TransactionSplit;
-import com.example.mrsaccountant.service.GroupService;
 import com.example.mrsaccountant.service.GroupTransactionService;
-import com.example.mrsaccountant.service.UserService;
+
 
 @RestController
 @RequestMapping("/mrsaccountant")
@@ -51,7 +47,7 @@ public class GroupTransactionController {
         }
     }
 
-    // update
-    // delete
+    // update 須留意userRecord同步
+    // delete 須留意userRecord同步
 }
 

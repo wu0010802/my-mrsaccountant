@@ -46,7 +46,6 @@ public class RecordController {
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<?> addRecord(@RequestBody Record record,
             @AuthenticationPrincipal Long userId) {
-        
 
         User user = userService.getUserById(userId);
         record.setUser(user);
@@ -56,12 +55,19 @@ public class RecordController {
                 .body("Record added successfully!");
     }
 
-
-
-
-
-
-    // upadte 功能尚未完成
+    @PutMapping("/user/records/{id}")
+    public ResponseEntity<?> updateUserRecord(
+            @PathVariable("id") Long recordId,
+            @RequestBody Record updatedRecord) {
+        try {
+            recordService.updateRecord(recordId, updatedRecord);
+            return ResponseEntity.ok("Record updated successfully.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to update record.");
+        }
+    }
 
     @DeleteMapping("/user/records/{id}")
     public ResponseEntity<?> deleteRecord(@PathVariable("id") Long recordId) {

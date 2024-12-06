@@ -4,11 +4,9 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import com.example.mrsaccountant.entity.Record;
 import com.example.mrsaccountant.repository.RecordRepository;
-import java.time.LocalDate;
 
 @Service
-public class 
-RecordService {
+public class RecordService {
 
     private final RecordRepository recordRepository;
 
@@ -24,8 +22,7 @@ RecordService {
         return recordRepository.findByUserId(id);
     }
 
-    public List<Record> findRecordsByUserIdAndDateType(Long userId, String startDate,String endDate) {
-    
+    public List<Record> findRecordsByUserIdAndDateType(Long userId, String startDate, String endDate) {
 
         return recordRepository.findByUserIdAndDateBetween(userId, startDate, endDate);
     }
@@ -34,7 +31,33 @@ RecordService {
         recordRepository.save(record);
     }
 
-    public void deleteRecord(Long recordId){
+    public void updateRecord(Long recordId, Record updatedRecord) {
+  
+        Record existingRecord = recordRepository.findById(recordId)
+                .orElseThrow(() -> new IllegalArgumentException("Record not found with ID: " + recordId));
+
+     
+        if (updatedRecord.getAmount() != null && !updatedRecord.getAmount().isNaN()) {
+            existingRecord.setAmount(updatedRecord.getAmount());
+        }
+        if (updatedRecord.getName() != null && !updatedRecord.getName().isEmpty()) {
+            existingRecord.setName(updatedRecord.getName());
+        }
+        if (updatedRecord.getCategory() != null && !updatedRecord.getCategory().isEmpty()) {
+            existingRecord.setCategory(updatedRecord.getCategory());
+        }
+        if (updatedRecord.getDate() != null && !updatedRecord.getDate().isEmpty()) {
+            existingRecord.setDate(updatedRecord.getDate());
+        }
+        if (updatedRecord.getType() != null) {
+            existingRecord.setType(updatedRecord.getType());
+        }
+
+
+        recordRepository.save(existingRecord);
+    }
+
+    public void deleteRecord(Long recordId) {
         recordRepository.deleteById(recordId);
     }
 

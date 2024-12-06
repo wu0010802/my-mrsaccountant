@@ -32,6 +32,7 @@ public class GroupController {
         this.userService = userService;
         this.groupService = groupService;
     }
+
     // 返回這個用戶有哪些群組
     @GetMapping("/user/groups")
     public ResponseEntity<?> getGroups(@AuthenticationPrincipal Long userId) {
@@ -46,6 +47,7 @@ public class GroupController {
 
         return ResponseEntity.ok(groups);
     }
+
     // 返回這個群組有哪些用戶
     @GetMapping("/group/users/{groupId}")
     public ResponseEntity<?> getGroupUsers(@PathVariable("groupId") Long groupId) {
@@ -63,6 +65,7 @@ public class GroupController {
 
         return ResponseEntity.ok(responseUsers);
     }
+
     // 新增群組
     @PostMapping("/user/groups")
     public ResponseEntity<?> addGroup(
@@ -86,6 +89,7 @@ public class GroupController {
                     .body("An unexpected error occurred");
         }
     }
+
     // 加入用戶至指定群組
     @PostMapping("/group/user/{userId}/{groupId}")
     public ResponseEntity<?> addUserToGroup(@PathVariable("userId") Long userId,
@@ -110,7 +114,22 @@ public class GroupController {
         }
     }
 
-    // 刪除群組的指定用戶
+    @DeleteMapping("/group/user/{userId}/{groupId}")
+    public ResponseEntity<?> deleteGroupUser(
+            @PathVariable("userId") Long userId,
+            @PathVariable("groupId") Long groupId) {
+        try {
+            groupService.deleteGroupUser(groupId, userId);
+            return ResponseEntity
+                    .ok("User with ID: " + userId + " successfully removed from group with ID: " + groupId);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to delete user from group.");
+        }
+    }
 
     @DeleteMapping("/user/groups/{groupId}")
     public ResponseEntity<?> deleteGroup(@PathVariable("groupId") Long groupId,
