@@ -32,7 +32,7 @@ public class GroupController {
         this.userService = userService;
         this.groupService = groupService;
     }
-
+    // 返回這個用戶有哪些群組
     @GetMapping("/user/groups")
     public ResponseEntity<?> getGroups(@AuthenticationPrincipal Long userId) {
 
@@ -46,7 +46,7 @@ public class GroupController {
 
         return ResponseEntity.ok(groups);
     }
-
+    // 返回這個群組有哪些用戶
     @GetMapping("/group/users/{groupId}")
     public ResponseEntity<?> getGroupUsers(@PathVariable("groupId") Long groupId) {
         Group retriveGroup = groupService.getGroupByGroupId(groupId);
@@ -63,7 +63,7 @@ public class GroupController {
 
         return ResponseEntity.ok(responseUsers);
     }
-
+    // 新增群組
     @PostMapping("/user/groups")
     public ResponseEntity<?> addGroup(
             @RequestBody Group group,
@@ -86,7 +86,7 @@ public class GroupController {
                     .body("An unexpected error occurred");
         }
     }
-
+    // 加入用戶至指定群組
     @PostMapping("/group/user/{userId}/{groupId}")
     public ResponseEntity<?> addUserToGroup(@PathVariable("userId") Long userId,
             @PathVariable("groupId") Long groupId) {
@@ -109,6 +109,8 @@ public class GroupController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
         }
     }
+
+    // 刪除群組的指定用戶
 
     @DeleteMapping("/user/groups/{groupId}")
     public ResponseEntity<?> deleteGroup(@PathVariable("groupId") Long groupId,

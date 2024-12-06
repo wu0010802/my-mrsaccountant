@@ -25,15 +25,10 @@ import com.example.mrsaccountant.service.UserService;
 @RequestMapping("/mrsaccountant")
 public class GroupTransactionController {
 
-    private final GroupService groupService;
     private final GroupTransactionService groupTransactionService;
-    private final UserService userService;
 
-    public GroupTransactionController(GroupService groupService, GroupTransactionService groupTransactionService,
-            UserService userService) {
-        this.groupService = groupService;
+    public GroupTransactionController(GroupTransactionService groupTransactionService) {
         this.groupTransactionService = groupTransactionService;
-        this.userService = userService;
     }
 
     @GetMapping("/group/transaction")
@@ -47,33 +42,7 @@ public class GroupTransactionController {
             @RequestBody GroupTransactionDTO groupTransactionDTO,
             @PathVariable Long groupId) {
         try {
-
-            Group group = groupService.getGroupByGroupId(groupId);
-            if (group == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Group not found with ID: " + groupId);
-            }
-
-            GroupTransaction groupTransaction = new GroupTransaction();
-            groupTransaction.setAmount(groupTransactionDTO.getAmount());
-            groupTransaction.setType(GroupTransaction.Type.valueOf(groupTransactionDTO.getType()));
-            groupTransaction.setCategory(groupTransactionDTO.getCategory());
-            groupTransaction.setDate(groupTransactionDTO.getDate());
-            groupTransaction.setName(groupTransactionDTO.getName());
-            groupTransaction.setGroup(group);
-
-            List<TransactionSplit> splits = groupTransactionDTO.getTransactionSplits().stream().map(splitDTO -> {
-                TransactionSplit split = new TransactionSplit();
-                split.setAmount(splitDTO.getAmount());
-                split.setRole(TransactionSplit.Role.valueOf(splitDTO.getRole()));
-                split.setUser(userService.getUserById(splitDTO.getUserId()));
-                split.setGroupTransaction(groupTransaction);
-                return split;
-            }).collect(Collectors.toList());
-
-            groupTransaction.setTransactionSplits(splits);
-
-            groupTransactionService.addGroupTransaction(groupTransaction);
-            
+            groupTransactionService.createGroupTransaction(groupTransactionDTO, groupId);
             return ResponseEntity.ok("GroupTransaction created successfully");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid data: " + e.getMessage());
@@ -82,4 +51,7 @@ public class GroupTransactionController {
         }
     }
 
+    // update
+    // delete
 }
+

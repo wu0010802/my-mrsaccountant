@@ -17,7 +17,6 @@ import java.util.Map;
 @RequestMapping("/auth")
 public class LineLoginController {
 
-    private final String profileUrl = "https://api.line.me/v2/profile";
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
 

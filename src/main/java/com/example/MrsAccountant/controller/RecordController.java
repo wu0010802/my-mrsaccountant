@@ -56,6 +56,13 @@ public class RecordController {
                 .body("Record added successfully!");
     }
 
+
+
+
+
+
+    // upadte 功能尚未完成
+
     @DeleteMapping("/user/records/{id}")
     public ResponseEntity<?> deleteRecord(@PathVariable("id") Long recordId) {
 
