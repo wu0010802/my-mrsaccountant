@@ -16,6 +16,11 @@ public class Record {
     @JsonIgnore
     private User user;
 
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "transaction_split_id", unique = true) 
+    @JsonIgnore
+    private TransactionSplit transactionSplit;
+
     @Column(nullable = false)
     private String name;
 
@@ -88,8 +93,15 @@ public class Record {
         this.category = category;
     }
 
-
     public enum Type {
         INCOME, EXPENSE
+    }
+
+    public TransactionSplit getTransactionSplit() {
+        return transactionSplit;
+    }
+
+    public void setTransactionSplit(TransactionSplit transactionSplit) {
+        this.transactionSplit = transactionSplit;
     }
 }

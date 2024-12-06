@@ -31,7 +31,7 @@ public class LineSigningKeyResolver implements SigningKeyResolver {
 
     private static final String LINE_JWKS_URL = "https://api.line.me/oauth2/v2.1/certs";
 
-    // 緩存公鑰
+  
     private final Map<String, PublicKey> publicKeyCache = new ConcurrentHashMap<>();
 
     @Override
@@ -61,7 +61,7 @@ public class LineSigningKeyResolver implements SigningKeyResolver {
                 if (kid.equals(key.get("kid"))) {
                     String kty = (String) key.get("kty");
                     if ("EC".equals(kty)) {
-                        // 檢查 EC 密鑰字段
+                     
                         String crv = (String) key.get("crv");
                         String x = (String) key.get("x");
                         String y = (String) key.get("y");
@@ -70,7 +70,7 @@ public class LineSigningKeyResolver implements SigningKeyResolver {
                             throw new RuntimeException("Invalid EC key data for kid: " + kid);
                         }
 
-                        // 生成橢圓曲線公鑰
+              
                         return generateEcPublicKey(crv, x, y);
                     } else {
                         throw new RuntimeException("Unsupported key type: " + kty);

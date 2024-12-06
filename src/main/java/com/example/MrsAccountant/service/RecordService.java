@@ -32,11 +32,10 @@ public class RecordService {
     }
 
     public void updateRecord(Long recordId, Record updatedRecord) {
-  
+
         Record existingRecord = recordRepository.findById(recordId)
                 .orElseThrow(() -> new IllegalArgumentException("Record not found with ID: " + recordId));
 
-     
         if (updatedRecord.getAmount() != null && !updatedRecord.getAmount().isNaN()) {
             existingRecord.setAmount(updatedRecord.getAmount());
         }
@@ -53,12 +52,16 @@ public class RecordService {
             existingRecord.setType(updatedRecord.getType());
         }
 
-
         recordRepository.save(existingRecord);
     }
 
     public void deleteRecord(Long recordId) {
         recordRepository.deleteById(recordId);
+    }
+
+    public void deleteRecordsByTransactionId(Long transactionId) {
+        List<Record> recordsToDelete = recordRepository.findByTransactionId(transactionId);
+        recordRepository.deleteAll(recordsToDelete);
     }
 
 }

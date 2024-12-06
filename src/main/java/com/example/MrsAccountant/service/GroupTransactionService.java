@@ -1,6 +1,8 @@
 package com.example.mrsaccountant.service;
 
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,6 +37,7 @@ public class GroupTransactionService {
     }
 
     public void createGroupTransaction(GroupTransactionDTO groupTransactionDTO, Long groupId) {
+
         Group group = groupService.getGroupByGroupId(groupId);
         if (group == null) {
             throw new IllegalArgumentException("Group not found with ID: " + groupId);
@@ -48,37 +51,112 @@ public class GroupTransactionService {
         groupTransaction.setName(groupTransactionDTO.getName());
         groupTransaction.setGroup(group);
 
+        List<Record> syncRecords = new ArrayList<>();
         List<TransactionSplit> splits = groupTransactionDTO.getTransactionSplits().stream().map(splitDTO -> {
+
             TransactionSplit split = new TransactionSplit();
             split.setAmount(splitDTO.getAmount());
             split.setRole(TransactionSplit.Role.valueOf(splitDTO.getRole()));
             split.setUser(userService.getUserById(splitDTO.getUserId()));
             split.setGroupTransaction(groupTransaction);
+
+            if (split.getRole().equals(TransactionSplit.Role.RECEIVER)) {
+                Record syncRecord = new Record();
+                syncRecord.setAmount(split.getAmount());
+                syncRecord.setCategory(groupTransaction.getCategory());
+                syncRecord.setDate(groupTransaction.getDate());
+                syncRecord.setUser(split.getUser());
+                syncRecord.setName(groupTransaction.getName());
+                syncRecord.setType(Record.Type.EXPENSE);
+                syncRecord.setTransactionSplit(split);
+                syncRecords.add(syncRecord);
+            }
+
             return split;
         }).collect(Collectors.toList());
 
-        // 同時新增紀錄至userRecord
-
-        List<Record> synsRecords = splits.stream().filter(split -> {
-            return split.getRole().equals(Role.RECEIVER);
-
-        }).map(split -> {
-            Record syncRecord = new Record();
-
-            syncRecord.setAmount(split.getAmount());
-            syncRecord.setCategory(groupTransaction.getCategory());
-            syncRecord.setDate(groupTransaction.getDate());
-            syncRecord.setUser(split.getUser());
-            syncRecord.setName(groupTransaction.getName());
-            syncRecord.setType(com.example.mrsaccountant.entity.Record.Type.EXPENSE);
-            return syncRecord;
-        }).collect(Collectors.toList());
-
         groupTransaction.setTransactionSplits(splits);
-        for (Record synsRecord : synsRecords) {
-            recordService.saveRecord(synsRecord);
-        }
 
         groupTransactionRespository.save(groupTransaction);
+
+        syncRecords.forEach(recordService::saveRecord);
     }
+
+    public void updateGroupTransaction(Long transactionId, GroupTransactionDTO updatedTransactionDTO) {
+
+        
+        GroupTransaction existingTransaction = groupTransactionRespository.findById(transactionId)
+                .orElseThrow(
+                        () -> new IllegalArgumentException("GroupTransaction not found with ID: " + transactionId));
+
+       
+        if (updatedTransactionDTO.getAmount() != null) {
+            existingTransaction.setAmount(updatedTransactionDTO.getAmount());
+        }
+        if (updatedTransactionDTO.getCategory() != null) {
+            existingTransaction.setCategory(updatedTransactionDTO.getCategory());
+        }
+        if (updatedTransactionDTO.getDate() != null) {
+            existingTransaction.setDate(updatedTransactionDTO.getDate());
+        }
+        if (updatedTransactionDTO.getName() != null) {
+            existingTransaction.setName(updatedTransactionDTO.getName());
+        }
+        if (updatedTransactionDTO.getType() != null) {
+            existingTransaction.setType(GroupTransaction.Type.valueOf(updatedTransactionDTO.getType()));
+        }
+
+        List<TransactionSplit> updatedSplits = updatedTransactionDTO.getTransactionSplits().stream().map(splitDTO -> {
+
+            TransactionSplit split = existingTransaction.getTransactionSplits().stream()
+                    .filter(existingSplit -> existingSplit.getId() != null
+                            && existingSplit.getId().equals(splitDTO.getId()))
+                    .findFirst()
+                    .orElse(new TransactionSplit());
+
+            split.setAmount(splitDTO.getAmount());
+            split.setRole(TransactionSplit.Role.valueOf(splitDTO.getRole()));
+            split.setUser(userService.getUserById(splitDTO.getUserId()));
+            split.setGroupTransaction(existingTransaction);
+
+            return split;
+        }).collect(Collectors.toList());
+
+        existingTransaction.getTransactionSplits().clear();
+        existingTransaction.getTransactionSplits().addAll(updatedSplits);
+
+        List<Record> updatedRecords = updatedSplits.stream().filter(split -> split.getRole().equals(Role.RECEIVER))
+                .map(split -> {
+
+                    Record updatedRecord = split.getRecord();
+                    if (updatedRecord == null) {
+                        updatedRecord = new Record();
+                    }
+                    updatedRecord.setAmount(split.getAmount());
+                    updatedRecord.setCategory(existingTransaction.getCategory());
+                    updatedRecord.setDate(existingTransaction.getDate());
+                    updatedRecord.setUser(split.getUser());
+                    updatedRecord.setName(existingTransaction.getName());
+                    updatedRecord.setType(Record.Type.EXPENSE);
+                    updatedRecord.setTransactionSplit(split);
+                    return updatedRecord;
+                }).collect(Collectors.toList());
+
+        recordService.deleteRecordsByTransactionId(transactionId);
+        updatedRecords.forEach(recordService::saveRecord);
+
+        groupTransactionRespository.save(existingTransaction);
+    }
+
+    public void deleteGroupTransaction(Long transactionId) {
+
+        GroupTransaction existingTransaction = groupTransactionRespository.findById(transactionId)
+                .orElseThrow(
+                        () -> new IllegalArgumentException("GroupTransaction not found with ID: " + transactionId));
+
+        recordService.deleteRecordsByTransactionId(transactionId);
+
+        groupTransactionRespository.delete(existingTransaction);
+    }
+
 }
