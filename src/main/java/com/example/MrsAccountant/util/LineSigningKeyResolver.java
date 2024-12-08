@@ -4,25 +4,20 @@ import io.jsonwebtoken.SigningKeyResolver;
 import io.jsonwebtoken.JwsHeader;
 import io.jsonwebtoken.Claims;
 
-import java.io.ByteArrayInputStream;
 import java.security.AlgorithmParameters;
 import java.security.Key;
 import java.security.PublicKey;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
 import java.math.BigInteger;
 import java.security.KeyFactory;
-import java.security.PublicKey;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.ECParameterSpec;
 import java.security.spec.ECPoint;
 import java.security.spec.ECPublicKeySpec;
-import java.security.spec.RSAPublicKeySpec;
+
 
 import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,13 +31,13 @@ public class LineSigningKeyResolver implements SigningKeyResolver {
 
     @Override
     public Key resolveSigningKey(JwsHeader header, Claims claims) {
-        String kid = header.getKeyId(); // 從 Header 中提取 key ID
+        String kid = header.getKeyId();
         return getKeyFromKid(kid);
     }
 
     @Override
     public Key resolveSigningKey(JwsHeader header, String plaintext) {
-        String kid = header.getKeyId(); // 從 Header 中提取 key ID
+        String kid = header.getKeyId();
         return getKeyFromKid(kid);
     }
 
@@ -52,7 +47,7 @@ public class LineSigningKeyResolver implements SigningKeyResolver {
         }
 
         try {
-            // 獲取 JWKS 響應
+            
             String jwksResponse = new RestTemplate().getForObject(LINE_JWKS_URL, String.class);
             Map<String, Object> jwks = new ObjectMapper().readValue(jwksResponse, Map.class);
             List<Map<String, Object>> keys = (List<Map<String, Object>>) jwks.get("keys");
@@ -86,16 +81,16 @@ public class LineSigningKeyResolver implements SigningKeyResolver {
     }
 
     private PublicKey generateEcPublicKey(String crv, String x, String y) throws Exception {
-        // 驗證曲線類型是否支持
+      
         if (!"P-256".equals(crv)) {
             throw new IllegalArgumentException("Unsupported curve: " + crv);
         }
 
-        // 將 Base64 URL 解碼後的 x 和 y 值轉換為字節數組
+
         byte[] xBytes = Base64.getUrlDecoder().decode(x);
         byte[] yBytes = Base64.getUrlDecoder().decode(y);
 
-        // 使用 ECPoint 構造橢圓曲線公鑰規範
+
         ECPoint ecPoint = new ECPoint(new BigInteger(1, xBytes), new BigInteger(1, yBytes));
         AlgorithmParameters parameters = AlgorithmParameters.getInstance("EC");
         parameters.init(new ECGenParameterSpec("secp256r1"));
