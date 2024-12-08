@@ -1,9 +1,9 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/accountant
-    username: yilunwu
-    password: password
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/accountant} 
+    username: ${SPRING_DATASOURCE_USERNAME:yilunwu} 
+    password: ${SPRING_DATASOURCE_PASSWORD:password} 
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update} 
+    show-sql: ${SPRING_JPA_SHOW_SQL:true} 
