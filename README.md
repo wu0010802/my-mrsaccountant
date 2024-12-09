@@ -3,6 +3,7 @@
 ## 啟動指令
 ```shell
 mvn clean package
+mvn spring-boot:run
 docker-compose up --build
 ```
 

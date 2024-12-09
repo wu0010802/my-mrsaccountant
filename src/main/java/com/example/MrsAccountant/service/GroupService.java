@@ -21,6 +21,7 @@ public class GroupService {
         this.groupRespository = groupRespository;
         this.userRepository = userRepository;
     }
+    
 
     public Group getGroupByGroupId(Long groupId) {
         return groupRespository.findById(groupId).orElse(null);

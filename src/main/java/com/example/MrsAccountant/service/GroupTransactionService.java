@@ -22,14 +22,17 @@ public class GroupTransactionService {
     private final GroupService groupService;
     private final UserService userService;
     private final RecordService recordService;
+    private final SettlementsService settlementsService;
 
     public GroupTransactionService(GroupTransactionRespository groupTransactionRespository,
             GroupService groupService,
-            UserService userService, RecordService recordService) {
+            UserService userService, RecordService recordService,
+            SettlementsService settlementsService) {
         this.groupTransactionRespository = groupTransactionRespository;
         this.groupService = groupService;
         this.userService = userService;
         this.recordService = recordService;
+        this.settlementsService = settlementsService;
     }
 
     public List<GroupTransaction> findGroupTransactionsByGroupId(Long groupId) {
@@ -80,16 +83,19 @@ public class GroupTransactionService {
         groupTransactionRespository.save(groupTransaction);
 
         syncRecords.forEach(recordService::saveRecord);
+
+        settlementsService.addSettlement(groupId);
+
     }
 
     public void updateGroupTransaction(Long transactionId, GroupTransactionDTO updatedTransactionDTO) {
 
-        
         GroupTransaction existingTransaction = groupTransactionRespository.findById(transactionId)
                 .orElseThrow(
                         () -> new IllegalArgumentException("GroupTransaction not found with ID: " + transactionId));
 
-       
+        Long groupId = existingTransaction.getGroup().getGroupId();
+
         if (updatedTransactionDTO.getAmount() != null) {
             existingTransaction.setAmount(updatedTransactionDTO.getAmount());
         }
@@ -146,6 +152,8 @@ public class GroupTransactionService {
         updatedRecords.forEach(recordService::saveRecord);
 
         groupTransactionRespository.save(existingTransaction);
+
+        settlementsService.addSettlement(groupId);
     }
 
     public void deleteGroupTransaction(Long transactionId) {
@@ -154,9 +162,12 @@ public class GroupTransactionService {
                 .orElseThrow(
                         () -> new IllegalArgumentException("GroupTransaction not found with ID: " + transactionId));
 
+        Long groupId = existingTransaction.getGroup().getGroupId();
+
         recordService.deleteRecordsByTransactionId(transactionId);
 
         groupTransactionRespository.delete(existingTransaction);
+        settlementsService.addSettlement(groupId);
     }
 
 }

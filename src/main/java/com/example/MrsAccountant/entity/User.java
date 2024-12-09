@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 @Entity
@@ -30,6 +31,13 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Record> records;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Setttlement> settlements = new ArrayList<>();
+
+    public List<Setttlement> getSettlements() {
+        return settlements;
+    }
 
     public Long getUserId() {
         return id;
@@ -90,4 +98,34 @@ public class User {
         transactionSplits.remove(split);
         split.setUser(null);
     }
+
+    public void setSettlements(List<Setttlement> settlements) {
+        this.settlements = settlements;
+    }
+
+    public void addSettlement(Setttlement settlement) {
+        settlements.add(settlement);
+        settlement.setUser(this);
+    }
+
+    public void removeSettlement(Setttlement settlement) {
+        settlements.remove(settlement);
+        settlement.setUser(null);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true; // 判斷是否為同一個實例
+        if (o == null || getClass() != o.getClass())
+            return false; // 判斷是否類型相同
+        User user = (User) o;
+        return Objects.equals(id, user.id); // 根據主鍵進行比較
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id); // 使用主鍵生成 hash 值
+    }
+
 }

@@ -1,6 +1,7 @@
 package com.example.mrsaccountant.entity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -20,10 +21,9 @@ public class Group {
     @Column(nullable = false)
     private String groupName;
 
-
     @ManyToMany(mappedBy = "belongGroups")
     @JsonIgnore
-    private Set<User> belongUsers = new HashSet<>(); 
+    private Set<User> belongUsers = new HashSet<>();
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -31,7 +31,9 @@ public class Group {
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<GroupTransaction> groupTransactions;
 
-    
+    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Setttlement> settlements = new ArrayList<>();
+
     public Long getGroupId() {
         return id;
     }
@@ -60,7 +62,6 @@ public class Group {
         return createdAt;
     }
 
-    
     @PrePersist
     public void setCreateAt() {
         this.createdAt = LocalDateTime.now();
@@ -91,5 +92,22 @@ public class Group {
         this.belongUsers.add(user);
         user.getGroups().add(this);
     }
-    
+
+    public List<Setttlement> getSettlements() {
+        return settlements;
+    }
+
+    public void setSettlements(List<Setttlement> settlements) {
+        this.settlements = settlements;
+    }
+
+    public void addSettlement(Setttlement settlement) {
+        settlements.add(settlement);
+        settlement.setGroup(this);
+    }
+
+    public void removeSettlement(Setttlement settlement) {
+        settlements.remove(settlement);
+        settlement.setGroup(null);
+    }
 }
