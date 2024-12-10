@@ -33,6 +33,9 @@ public class TransactionSplit {
     @JsonIgnore
     private User user;
 
+    @OneToOne(mappedBy = "transactionSplit", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private Record record;
+
     @Column(nullable = false)
     private Double amount;
 
@@ -71,9 +74,6 @@ public class TransactionSplit {
     public Double getAmount() {
         return amount;
     }
-
-    @OneToOne(mappedBy = "transactionSplit", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private Record record;
 
     public void setAmount(Double amount) {
         this.amount = amount;

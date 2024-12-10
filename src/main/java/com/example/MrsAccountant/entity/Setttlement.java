@@ -9,8 +9,11 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 @Entity
+@Table(name = "setttlement")
 public class Setttlement {
 
     @Id
@@ -33,7 +36,6 @@ public class Setttlement {
     @JsonIgnore
     private User user;
 
-    // Getter and Setter for id
     public long getId() {
         return id;
     }
@@ -42,7 +44,6 @@ public class Setttlement {
         this.id = id;
     }
 
-    // Getter and Setter for payAmount
     public Double getPayAmount() {
         return payAmount;
     }
@@ -51,7 +52,6 @@ public class Setttlement {
         this.payAmount = payAmount;
     }
 
-    // Getter and Setter for receiveAmount
     public Double getReceiveAmount() {
         return receiveAmount;
     }
@@ -60,7 +60,6 @@ public class Setttlement {
         this.receiveAmount = receiveAmount;
     }
 
-    // Getter and Setter for balanceAmount
     public Double getBalanceAmount() {
         return balanceAmount;
     }
@@ -69,7 +68,6 @@ public class Setttlement {
         this.balanceAmount = balanceAmount;
     }
 
-    // Getter and Setter for group
     public Group getGroup() {
         return group;
     }
@@ -78,7 +76,6 @@ public class Setttlement {
         this.group = group;
     }
 
-    // Getter and Setter for user
     public User getUser() {
         return user;
     }

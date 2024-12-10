@@ -31,6 +31,10 @@ public class RecordService {
         recordRepository.save(record);
     }
 
+    public void saveAll(List<Record> records) {
+        recordRepository.saveAll(records);
+    }
+
     public void updateRecord(Long recordId, Record updatedRecord) {
 
         Record existingRecord = recordRepository.findById(recordId)
