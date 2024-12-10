@@ -4,7 +4,7 @@ import org.springframework.stereotype.Service;
 
 import com.example.mrsaccountant.entity.Group;
 import com.example.mrsaccountant.entity.GroupTransaction;
-import com.example.mrsaccountant.entity.Setttlement;
+import com.example.mrsaccountant.entity.Settlement;
 import com.example.mrsaccountant.entity.TransactionSplit;
 import com.example.mrsaccountant.entity.User;
 import com.example.mrsaccountant.repository.SettlementRepository;
@@ -17,62 +17,80 @@ import java.util.stream.Collectors;
 @Service
 public class SettlementsService {
 
-    private final GroupService groupService;
-    
-    private final SettlementRepository settlementRepository;
+        private final GroupService groupService;
 
-    public SettlementsService(GroupService groupService,
-            SettlementRepository settlementRepository) {
-        this.groupService = groupService;
-        
-        this.settlementRepository = settlementRepository;
+        private final SettlementRepository settlementRepository;
 
-    }
+        public SettlementsService(GroupService groupService,
+                        SettlementRepository settlementRepository) {
+                this.groupService = groupService;
 
-    @Transactional
-    public void addSettlement(long groupId) {
-        Group group = groupService.getGroupByGroupId(groupId);
-        List<GroupTransaction> transactions = group.getGroupTransactions();
-        Set<User> users = group.getBelongUsers();
+                this.settlementRepository = settlementRepository;
 
-        List<TransactionSplit> transactionSplits = transactions.stream()
-                .filter(transaction -> transaction.getType().equals(GroupTransaction.Type.EXPENSE))
-                .flatMap(transaction -> transaction.getTransactionSplits().stream())
-                .collect(Collectors.toList());
+        }
 
-        List<Setttlement> setttlements = users.stream()
-                .map(user -> {
-                    Setttlement settlement = new Setttlement();
+        @Transactional
+        public void addSettlementByGroupId(long groupId) {
+                Group group = groupService.getGroupByGroupId(groupId);
+                List<GroupTransaction> transactions = group.getGroupTransactions();
+                Set<User> users = group.getBelongUsers();
 
-                    double payAmount = transactionSplits.stream()
-                            .filter(split -> split.getUser().equals(user)
-                                    && split.getRole().equals(TransactionSplit.Role.PAYER))
+                List<TransactionSplit> transactionSplits = transactions.stream()
+                                .filter(transaction -> transaction.getType().equals(GroupTransaction.Type.EXPENSE))
+                                .flatMap(transaction -> transaction.getTransactionSplits().stream())
+                                .collect(Collectors.toList());
 
-                            .mapToDouble(TransactionSplit::getAmount)
-                            .sum();
-                    double receiveAmount = transactionSplits.stream()
-                            .filter(split -> split.getUser().equals(user)
-                                    && split.getRole().equals(TransactionSplit.Role.RECEIVER))
-                            .mapToDouble(TransactionSplit::getAmount)
-                            .sum();
+                List<Settlement> setttlements = users.stream()
+                                .map(user -> {
+                                        Settlement settlement = new Settlement();
 
-                    double balanceAmount = payAmount - receiveAmount;
+                                        double payAmount = transactionSplits.stream()
+                                                        .filter(split -> split.getUser().equals(user)
+                                                                        && split.getRole().equals(
+                                                                                        TransactionSplit.Role.PAYER))
 
-                    settlement.setPayAmount(payAmount);
-                    settlement.setReceiveAmount(receiveAmount);
-                    settlement.setBalanceAmount(balanceAmount);
-                    settlement.setGroup(group);
-                    settlement.setUser(user);
+                                                        .mapToDouble(TransactionSplit::getAmount)
+                                                        .sum();
+                                        double receiveAmount = transactionSplits.stream()
+                                                        .filter(split -> split.getUser().equals(user)
+                                                                        && split.getRole().equals(
+                                                                                        TransactionSplit.Role.RECEIVER))
+                                                        .mapToDouble(TransactionSplit::getAmount)
+                                                        .sum();
 
-                    return settlement;
-                })
-                .collect(Collectors.toList());
+                                        double balanceAmount = payAmount - receiveAmount;
 
-        settlementRepository.saveAll(setttlements);
+                                        settlement.setPayAmount(payAmount);
+                                        settlement.setReceiveAmount(receiveAmount);
+                                        settlement.setBalanceAmount(balanceAmount);
+                                        settlement.setGroup(group);
+                                        settlement.setUser(user);
 
-    }
+                                        return settlement;
+                                })
+                                .collect(Collectors.toList());
 
+                settlementRepository.saveAll(setttlements);
 
- 
+        }
+
+        public List<Settlement> getLatestSettlement(Long groupId) {
+
+                return settlementRepository.findByGroupId(groupId);
+
+        }
+
+        public void replySettlement(Long groupId) {
+
+                List<Settlement> settlements = getLatestSettlement(groupId);
+                Map<User, Double> userBalance = new HashMap<User, Double>();
+
+                settlements.stream().forEach(settlement -> {
+                        userBalance.put(settlement.getUser(), settlement.getBalanceAmount());
+                });
+
+                // 先排序然後先從最負債最多的開始還給債權人
+
+        }
 
 }

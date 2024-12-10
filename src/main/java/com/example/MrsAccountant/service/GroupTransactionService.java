@@ -1,12 +1,14 @@
 package com.example.mrsaccountant.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.example.mrsaccountant.dto.GroupTransactionDTO;
+import com.example.mrsaccountant.dto.TransactionSplitDTO;
 import com.example.mrsaccountant.entity.Group;
 import com.example.mrsaccountant.entity.GroupTransaction;
 import com.example.mrsaccountant.entity.TransactionSplit;
@@ -16,6 +18,7 @@ import com.example.mrsaccountant.repository.GroupTransactionRespository;
 import com.example.mrsaccountant.entity.Record;
 
 @Service
+@Transactional
 public class GroupTransactionService {
 
     private final GroupTransactionRespository groupTransactionRespository;
@@ -40,7 +43,9 @@ public class GroupTransactionService {
     }
 
     public void createGroupTransaction(GroupTransactionDTO groupTransactionDTO, Long groupId) {
-
+        if (!isTransactionBalanced(groupTransactionDTO)) {
+            throw new IllegalArgumentException("Transaction amounts are not balanced.");
+        }
         Group group = groupService.getGroupByGroupId(groupId);
         if (group == null) {
             throw new IllegalArgumentException("Group not found with ID: " + groupId);
@@ -84,11 +89,15 @@ public class GroupTransactionService {
 
         syncRecords.forEach(recordService::saveRecord);
 
-        settlementsService.addSettlement(groupId);
+        settlementsService.addSettlementByGroupId(groupId);
 
     }
 
     public void updateGroupTransaction(Long transactionId, GroupTransactionDTO updatedTransactionDTO) {
+
+        if (!isTransactionBalanced(updatedTransactionDTO)) {
+            throw new IllegalArgumentException("Transaction amounts are not balanced.");
+        }
 
         GroupTransaction existingTransaction = groupTransactionRespository.findById(transactionId)
                 .orElseThrow(
@@ -153,7 +162,7 @@ public class GroupTransactionService {
 
         groupTransactionRespository.save(existingTransaction);
 
-        settlementsService.addSettlement(groupId);
+        settlementsService.addSettlementByGroupId(groupId);
     }
 
     public void deleteGroupTransaction(Long transactionId) {
@@ -167,7 +176,25 @@ public class GroupTransactionService {
         recordService.deleteRecordsByTransactionId(transactionId);
 
         groupTransactionRespository.delete(existingTransaction);
-        settlementsService.addSettlement(groupId);
+        settlementsService.addSettlementByGroupId(groupId);
     }
+
+
+    public boolean isTransactionBalanced(GroupTransactionDTO transactionDTO) {
+
+    double payerTotal = transactionDTO.getTransactionSplits().stream()
+            .filter(split -> "PAYER".equalsIgnoreCase(split.getRole()))
+            .mapToDouble(TransactionSplitDTO::getAmount)
+            .sum();
+
+ 
+    double receiverTotal = transactionDTO.getTransactionSplits().stream()
+            .filter(split -> "RECEIVER".equalsIgnoreCase(split.getRole()))
+            .mapToDouble(TransactionSplitDTO::getAmount)
+            .sum();
+
+    
+    return payerTotal == receiverTotal && transactionDTO.getAmount().equals(payerTotal);
+}
 
 }

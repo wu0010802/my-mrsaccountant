@@ -33,9 +33,9 @@ public class User {
     private List<Record> records;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Setttlement> settlements = new ArrayList<>();
+    private List<Settlement> settlements = new ArrayList<>();
 
-    public List<Setttlement> getSettlements() {
+    public List<Settlement> getSettlements() {
         return settlements;
     }
 
@@ -99,16 +99,16 @@ public class User {
         split.setUser(null);
     }
 
-    public void setSettlements(List<Setttlement> settlements) {
+    public void setSettlements(List<Settlement> settlements) {
         this.settlements = settlements;
     }
 
-    public void addSettlement(Setttlement settlement) {
+    public void addSettlement(Settlement settlement) {
         settlements.add(settlement);
         settlement.setUser(this);
     }
 
-    public void removeSettlement(Setttlement settlement) {
+    public void removeSettlement(Settlement settlement) {
         settlements.remove(settlement);
         settlement.setUser(null);
     }

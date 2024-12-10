@@ -32,7 +32,7 @@ public class Group {
     private List<GroupTransaction> groupTransactions;
 
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Setttlement> settlements = new ArrayList<>();
+    private List<Settlement> settlements = new ArrayList<>();
 
     public Long getGroupId() {
         return id;
@@ -93,20 +93,20 @@ public class Group {
         user.getGroups().add(this);
     }
 
-    public List<Setttlement> getSettlements() {
+    public List<Settlement> getSettlements() {
         return settlements;
     }
 
-    public void setSettlements(List<Setttlement> settlements) {
+    public void setSettlements(List<Settlement> settlements) {
         this.settlements = settlements;
     }
 
-    public void addSettlement(Setttlement settlement) {
+    public void addSettlement(Settlement settlement) {
         settlements.add(settlement);
         settlement.setGroup(this);
     }
 
-    public void removeSettlement(Setttlement settlement) {
+    public void removeSettlement(Settlement settlement) {
         settlements.remove(settlement);
         settlement.setGroup(null);
     }

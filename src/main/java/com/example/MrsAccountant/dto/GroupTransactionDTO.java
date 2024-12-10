@@ -57,4 +57,7 @@ public class GroupTransactionDTO {
     public void setTransactionSplits(List<TransactionSplitDTO> transactionSplits) {
         this.transactionSplits = transactionSplits;
     }
+
+
+    
 }
