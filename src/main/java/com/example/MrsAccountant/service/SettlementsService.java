@@ -2,6 +2,7 @@ package com.example.mrsaccountant.service;
 
 import org.springframework.stereotype.Service;
 
+import com.example.mrsaccountant.dto.SettlementStatusDTO;
 import com.example.mrsaccountant.entity.Group;
 import com.example.mrsaccountant.entity.GroupTransaction;
 import com.example.mrsaccountant.entity.Settlement;
@@ -9,8 +10,9 @@ import com.example.mrsaccountant.entity.TransactionSplit;
 import com.example.mrsaccountant.entity.User;
 import com.example.mrsaccountant.repository.SettlementRepository;
 
-import jakarta.transaction.Transactional;
 
+import static java.util.stream.Collectors.toMap;
+import jakarta.transaction.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -80,17 +82,100 @@ public class SettlementsService {
 
         }
 
-        public void replySettlement(Long groupId) {
+        public List<SettlementStatusDTO>  replySettlement(Long groupId) {
 
                 List<Settlement> settlements = getLatestSettlement(groupId);
-                Map<User, Double> userBalance = new HashMap<User, Double>();
-
+                Map<User, Double> userBalances = new HashMap<User, Double>();
                 settlements.stream().forEach(settlement -> {
-                        userBalance.put(settlement.getUser(), settlement.getBalanceAmount());
+                        User user = settlement.getUser();
+
+                        userBalances.put(user, settlement.getBalanceAmount());
                 });
 
-                // 先排序然後先從最負債最多的開始還給債權人
+                User user3 = new User();
+                user3.setUserId(3L);
+                Double user3Pay = 1200.0;
+                userBalances.put(user3, user3Pay);
 
+                User user4 = new User();
+                user4.setUserId(4L);
+                Double user4Receive = -1200.0;
+                userBalances.put(user4, user4Receive);
+
+                Queue<Map.Entry<User, Double>> positiveBalances = new LinkedList<Map.Entry<User, Double>>();
+                Queue<Map.Entry<User, Double>> negativeBalances = new LinkedList<Map.Entry<User, Double>>();
+
+                Map<User, Double> sortedUserBalances = userBalances
+                                .entrySet()
+                                .stream()
+                                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder())) 
+                                .collect(
+                                                toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e2,
+                                                                LinkedHashMap::new));
+
+                sortedUserBalances.entrySet().stream()
+                                .filter(entry -> entry.getValue() >= 0)
+                                .forEach(positiveBalances::add);
+                sortedUserBalances.entrySet().stream()
+                                .filter(entry -> entry.getValue() < 0)
+                                .forEach(entry -> negativeBalances.add(entry));
+
+                Stack<Map.Entry<User, Double>> reversedNegativeBalances = new Stack<>();
+                while (!negativeBalances.isEmpty()) {
+                        reversedNegativeBalances.push(negativeBalances.poll());
+                }
+
+                while (!reversedNegativeBalances.isEmpty()) {
+                        negativeBalances.add(reversedNegativeBalances.pop());
+                }
+
+                List<SettlementStatusDTO> settlementStatuses = new ArrayList<>();
+
+                while (!positiveBalances.isEmpty()) {
+                        if (positiveBalances.peek().getValue() >= Math.abs(negativeBalances.peek().getValue())) {
+
+                                Double replyAmount = negativeBalances.peek().getValue();
+
+                                positiveBalances.peek().setValue(positiveBalances.peek().getValue()
+                                                + negativeBalances.peek().getValue());
+
+                                negativeBalances.peek().setValue(0.0);
+
+                                SettlementStatusDTO settlementStatus = new SettlementStatusDTO(
+                                        negativeBalances.peek().getKey().getUsername(),
+                                        positiveBalances.peek().getKey().getUsername(),
+                                        replyAmount
+                                    );
+
+
+                                settlementStatuses.add(settlementStatus);
+
+                                negativeBalances.poll();
+                                if (negativeBalances.isEmpty()) {
+                                        break;
+                                }
+                        }
+                        if (positiveBalances.peek().getValue() < Math.abs(negativeBalances.peek().getValue())) {
+                                Double replyRemainAmount = positiveBalances.peek().getValue();
+                                negativeBalances.peek().setValue(negativeBalances.peek().getValue()
+                                                + positiveBalances.peek().getValue());
+                                positiveBalances.peek().setValue(0.0);
+                                positiveBalances.poll();
+
+                                SettlementStatusDTO settlementStatus = new SettlementStatusDTO(
+                                        negativeBalances.peek().getKey().getUsername(),
+                                        positiveBalances.peek().getKey().getUsername(),
+                                        replyRemainAmount
+                                    );
+
+                                settlementStatuses.add(settlementStatus);
+
+                        }
+
+
+
+                }
+                return settlementStatuses;
         }
 
 }
