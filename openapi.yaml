@@ -1,4 +1,4 @@
-openapi: 3.0.1
+openapi: "3.1.0"
 info:
   title: Online Order API
   version: 1.0.0
@@ -22,7 +22,7 @@ paths:
       description: Fetches all groups associated with the authenticated user.
       operationId: getUserGroups
       responses:
-        '200':
+        "200":
           description: A list of user groups.
           content:
             application/json:
@@ -38,7 +38,7 @@ paths:
                       createdAt: "2024-11-21"
                       groupTransactions: []
                       groupId: 6
-        '204':
+        "204":
           description: No groups found for the user.
         default:
           description: An error occurred while retrieving user groups.
@@ -61,14 +61,14 @@ paths:
               required:
                 - groupName
       responses:
-        '201':
+        "201":
           description: Group created successfully.
           content:
             application/json:
               schema:
                 type: string
                 example: Group added successfully!
-        '400':
+        "400":
           description: Invalid group data provided.
         default:
           description: An error occurred while creating the group.
@@ -93,21 +93,21 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: User successfully added to the group
           content:
             application/json:
               schema:
                 type: string
                 example: "User successfully added to the group."
-        '400':
+        "400":
           description: Invalid input
           content:
             application/json:
               schema:
                 type: string
                 example: "Invalid input data"
-        '404':
+        "404":
           description: User or Group not found
           content:
             application/json:
@@ -120,7 +120,7 @@ paths:
                   GroupNotFound:
                     summary: Group not found
                     value: "Group not found with ID: {groupId}"
-        '500':
+        "500":
           description: Unexpected error
           content:
             application/json:
@@ -130,7 +130,47 @@ paths:
       tags:
         - User Management
 
-  /group/transaction/{groupId}:
+  /mrsaccountant/group/transaction:
+    get:
+      summary: Retrieve all transactions by group ID
+      description: Fetches all group transactions associated with the specified group ID.
+      parameters:
+        - name: groupId
+          in: query
+          required: true
+          description: The ID of the group to retrieve transactions for
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: A list of group transactions
+          content:
+            application/json:
+              examples:
+                sampleResponse:
+                  summary: Sample response
+                  value:
+                    - transactionId: 1
+                      name: Dinner with friends
+                      amount: 1500.0
+                      date: "2024-12-05"
+                      category: Food
+                      type: EXPENSE
+                      transactionSplits:
+                        - userId: 1
+                          amount: 750.0
+                          role: PAYER
+                        - userId: 2
+                          amount: 750.0
+                          role: RECEIVER
+        "404":
+          description: No transactions found for the group.
+        "500":
+          description: An error occurred while retrieving transactions.
+      tags:
+        - Transactions
+
+  /mrsaccountant/group/transaction/{groupId}:
     post:
       summary: Create a new group transaction
       description: Creates a transaction for the specified group with transaction splits.
@@ -152,24 +192,19 @@ paths:
                 amount:
                   type: number
                   description: Total amount of the transaction
-                  example: 1500.0
                 type:
                   type: string
                   description: Type of the transaction (e.g., EXPENSE, INCOME, TRANSFER)
-                  example: EXPENSE
                 category:
                   type: string
                   description: Category of the transaction (e.g., Food, Travel)
-                  example: Food
                 date:
                   type: string
                   format: date
                   description: Date of the transaction in YYYY-MM-DD format
-                  example: 2024-12-05
                 name:
                   type: string
                   description: Name or description of the transaction
-                  example: Dinner with friends
                 transactionSplits:
                   type: array
                   description: List of transaction splits associated with the group transaction
@@ -179,38 +214,304 @@ paths:
                       userId:
                         type: integer
                         description: ID of the user associated with the split
-                        example: 1
                       amount:
                         type: number
                         description: Amount allocated to the user
-                        example: 750.0
                       role:
                         type: string
                         description: Role of the user in the transaction (e.g., PAYER, RECEIVER)
-                        example: PAYER
       responses:
-        '200':
+        "200":
           description: GroupTransaction created successfully
-        '400':
+        "400":
           description: Invalid data provided
-          content:
-            application/json:
-              schema:
-                type: string
-                example: "Invalid data: {error message}"
-        '404':
+        "404":
           description: Group not found
-          content:
-            application/json:
-              schema:
-                type: string
-                example: "Group not found with ID: {groupId}"
-        '500':
+        "500":
           description: Internal server error
-          content:
-            application/json:
-              schema:
-                type: string
-                example: "Failed to create GroupTransaction."
       tags:
         - Transactions
+
+  /mrsaccountant/group/transaction/{transactionId}:
+    put:
+      summary: Update an existing group transaction
+      description: Updates details of a specified group transaction by transaction ID.
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          description: The ID of the transaction to update
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        description: Updated details of the group transaction
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+                  description: Updated total amount of the transaction
+                type:
+                  type: string
+                  description: Updated type of the transaction
+                category:
+                  type: string
+                  description: Updated category of the transaction
+                date:
+                  type: string
+                  format: date
+                  description: Updated date of the transaction
+                name:
+                  type: string
+                  description: Updated name or description of the transaction
+                transactionSplits:
+                  type: array
+                  description: Updated transaction splits
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        description: ID of the transaction split to update
+                      userId:
+                        type: integer
+                        description: ID of the user associated with the split
+                      amount:
+                        type: number
+                        description: Amount allocated to the user
+                      role:
+                        type: string
+                        description: Role of the user in the transaction
+      responses:
+        "200":
+          description: GroupTransaction updated successfully
+        "400":
+          description: Invalid data provided
+        "404":
+          description: Transaction not found
+        "500":
+          description: Internal server error
+      tags:
+        - Transactions
+
+    delete:
+      summary: Delete a group transaction
+      description: Deletes a specified group transaction by transaction ID.
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          description: The ID of the transaction to delete
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: GroupTransaction deleted successfully
+        "404":
+          description: Transaction not found
+        "500":
+          description: Internal server error
+      tags:
+        - Transactions
+
+      /mrsaccountant/user/records:
+    get:
+      summary: Retrieve user records
+      description: Fetches all records for the authenticated user, optionally filtered by date range.
+      parameters:
+        - name: startdate
+          in: query
+          required: false
+          description: The start date for filtering records (inclusive).
+          schema:
+            type: string
+            format: date
+        - name: enddate
+          in: query
+          required: false
+          description: The end date for filtering records (inclusive).
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: A list of user records.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      description: The ID of the record.
+                    name:
+                      type: string
+                      description: The name or description of the record.
+                    amount:
+                      type: number
+                      description: The amount of the record.
+                    date:
+                      type: string
+                      format: date
+                      description: The date of the record.
+                    category:
+                      type: string
+                      description: The category of the record.
+                    type:
+                      type: string
+                      description: The type of the record (e.g., EXPENSE, INCOME).
+        "400":
+          description: Invalid date range provided.
+        "500":
+          description: An error occurred while retrieving records.
+      tags:
+        - Records
+
+    post:
+      summary: Add a new record
+      description: Adds a new record for the authenticated user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: The name or description of the record.
+                amount:
+                  type: number
+                  description: The amount of the record.
+                date:
+                  type: string
+                  format: date
+                  description: The date of the record.
+                category:
+                  type: string
+                  description: The category of the record.
+                type:
+                  type: string
+                  description: The type of the record (e.g., EXPENSE, INCOME).
+      responses:
+        "201":
+          description: Record created successfully.
+        "400":
+          description: Invalid data provided.
+        "500":
+          description: An error occurred while creating the record.
+      tags:
+        - Records
+
+  /mrsaccountant/user/records/{id}:
+    put:
+      summary: Update a user record
+      description: Updates the details of a specified user record by ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the record to update.
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: The updated name or description of the record.
+                amount:
+                  type: number
+                  description: The updated amount of the record.
+                date:
+                  type: string
+                  format: date
+                  description: The updated date of the record.
+                category:
+                  type: string
+                  description: The updated category of the record.
+                type:
+                  type: string
+                  description: The updated type of the record (e.g., EXPENSE, INCOME).
+      responses:
+        "200":
+          description: Record updated successfully.
+        "400":
+          description: Invalid data provided.
+        "404":
+          description: Record not found.
+        "500":
+          description: An error occurred while updating the record.
+      tags:
+        - Records
+
+    delete:
+      summary: Delete a user record
+      description: Deletes a specified user record by ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the record to delete.
+          schema:
+            type: integer
+      responses:
+        "202":
+          description: Record deleted successfully.
+        "404":
+          description: Record not found.
+        "500":
+          description: An error occurred while deleting the record.
+      tags:
+        - Records
+    /mrsaccountant/settlement/{groupId}:
+    get:
+      summary: Retrieve settlement details for a group
+      description: Fetches the latest settlements and settlement statuses for the specified group ID.
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          description: The ID of the group for which settlements are being retrieved.
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Settlement details retrieved successfully.
+          content:
+            application/json:
+              examples:
+                settlementResponse:
+                  summary: Example response
+                  value:
+                    settlementStatuses:
+                      - payer: User1
+                        receiver: User2
+                        amount: 50.0
+                      - payer: User3
+                        receiver: User1
+                        amount: 30.0
+                    latestSettlements:
+                      - user: User1
+                        payAmount: 100.0
+                        receiveAmount: 50.0
+                        balanceAmount: 50.0
+                      - user: User2
+                        payAmount: 0.0
+                        receiveAmount: 50.0
+                        balanceAmount: -50.0
+        "404":
+          description: Group not found.
+        "500":
+          description: An error occurred while retrieving settlement details.
+      tags:
+        - Settlements

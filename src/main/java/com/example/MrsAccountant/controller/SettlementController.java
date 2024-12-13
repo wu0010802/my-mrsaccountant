@@ -1,9 +1,12 @@
 package com.example.mrsaccountant.controller;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -20,11 +23,17 @@ public class SettlementController {
         this.settlementsService = settlementsService;
     }
 
-    @GetMapping("settlement")
-    public ResponseEntity<?> testSettlement() {
+@GetMapping("settlement/{groupId}")
+public ResponseEntity<?> getSettlementDetails(@PathVariable long groupId) {
+    List<SettlementStatusDTO> settlementStatuses = settlementsService.replySettlement(groupId);
+    List<Settlement> latestSettlements = settlementsService.getLatestSettlement(groupId);
 
-        List<SettlementStatusDTO> settlementStatuses = settlementsService.replySettlement(1L);
-        return ResponseEntity.ok(settlementStatuses);
-    }
+    Map<String, Object> response = new HashMap<>();
+    response.put("settlementStatuses", settlementStatuses);
+    response.put("latestSettlements", latestSettlements);
+
+    return ResponseEntity.ok(response);
+}
+
 
 }
