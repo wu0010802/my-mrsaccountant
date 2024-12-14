@@ -2,10 +2,9 @@ package com.example.mrsaccountant.entity;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
+import com.example.mrsaccountant.entity.UserGroup.GroupRole;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.*;
@@ -21,9 +20,9 @@ public class Group {
     @Column(nullable = false)
     private String groupName;
 
-    @ManyToMany(mappedBy = "belongGroups")
+    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
-    private Set<User> belongUsers = new HashSet<>();
+    private List<UserGroup> userGroups = new ArrayList<>();
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -50,12 +49,12 @@ public class Group {
         this.groupName = groupName;
     }
 
-    public Set<User> getBelongUsers() {
-        return belongUsers;
+    public List<UserGroup> getUserGroups() {
+        return userGroups;
     }
 
-    public void setBelongUsers(Set<User> belongUsers) {
-        this.belongUsers = belongUsers;
+    public void setUserGroups(List<UserGroup> userGroups) {
+        this.userGroups = userGroups;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -85,14 +84,6 @@ public class Group {
         groupTransaction.setGroup(null);
     }
 
-    public void addUser(User user) {
-        if (this.belongUsers == null) {
-            this.belongUsers = new HashSet<>();
-        }
-        this.belongUsers.add(user);
-        user.getGroups().add(this);
-    }
-
     public List<Settlement> getSettlements() {
         return settlements;
     }
@@ -110,4 +101,23 @@ public class Group {
         settlements.remove(settlement);
         settlement.setGroup(null);
     }
+
+    public void addUserToGroup(User user, Group group, GroupRole role) {
+        UserGroup userGroup = new UserGroup();
+        userGroup.setUser(user);
+        userGroup.setGroup(group);
+        userGroup.setRole(role);
+
+        user.getUserGroups().add(userGroup);
+        group.getUserGroups().add(userGroup);
+    }
+
+    public GroupRole getUserRoleInGroup(User user, Group group) {
+        return user.getUserGroups().stream()
+                .filter(userGroup -> userGroup.getGroup().equals(group))
+                .map(UserGroup::getRole)
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("User is not in the group"));
+    }
+
 }

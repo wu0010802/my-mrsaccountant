@@ -8,10 +8,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name = "users")
 public class User {
-
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -22,9 +24,9 @@ public class User {
     @Column(unique = true)
     private String lineId;
 
-    @ManyToMany
-    @JoinTable(name = "user_group", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "group_id"))
-    private Set<Group> belongGroups = new HashSet<>();
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<UserGroup> userGroups = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TransactionSplit> transactionSplits = new ArrayList<>();
@@ -61,14 +63,6 @@ public class User {
 
     public void setLineId(String lineId) {
         this.lineId = lineId;
-    }
-
-    public Set<Group> getGroups() {
-        return belongGroups;
-    }
-
-    public void setGroups(Set<Group> belongGroups) {
-        this.belongGroups = belongGroups;
     }
 
     public List<Record> getRecords() {
@@ -116,11 +110,19 @@ public class User {
     @Override
     public boolean equals(Object o) {
         if (this == o)
-            return true; // 判斷是否為同一個實例
+            return true; 
         if (o == null || getClass() != o.getClass())
-            return false; // 判斷是否類型相同
+            return false; 
         User user = (User) o;
-        return Objects.equals(id, user.id); // 根據主鍵進行比較
+        return Objects.equals(id, user.id); 
+    }
+
+    public List<UserGroup> getUserGroups() {
+        return userGroups;
+    }
+
+    public void setUserGroups(List<UserGroup> userGroups) {
+        this.userGroups = userGroups;
     }
 
     @Override

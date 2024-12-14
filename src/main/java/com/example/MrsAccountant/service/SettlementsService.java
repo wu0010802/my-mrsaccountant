@@ -8,6 +8,7 @@ import com.example.mrsaccountant.entity.GroupTransaction;
 import com.example.mrsaccountant.entity.Settlement;
 import com.example.mrsaccountant.entity.TransactionSplit;
 import com.example.mrsaccountant.entity.User;
+import com.example.mrsaccountant.entity.UserGroup;
 import com.example.mrsaccountant.repository.SettlementRepository;
 
 import static java.util.stream.Collectors.toMap;
@@ -34,7 +35,9 @@ public class SettlementsService {
         public void addSettlementByGroupId(long groupId) {
                 Group group = groupService.getGroupByGroupId(groupId);
                 List<GroupTransaction> transactions = group.getGroupTransactions();
-                Set<User> users = group.getBelongUsers();
+                List<UserGroup> users = group.getUserGroups();
+                 
+
 
                 List<TransactionSplit> transactionSplits = transactions.stream()
                                 .filter(transaction -> transaction.getType().equals(GroupTransaction.Type.EXPENSE))
@@ -44,16 +47,16 @@ public class SettlementsService {
                 List<Settlement> setttlements = users.stream()
                                 .map(user -> {
                                         Settlement settlement = new Settlement();
-
+                                        User addedUser  = user.getUser();
                                         double payAmount = transactionSplits.stream()
-                                                        .filter(split -> split.getUser().equals(user)
+                                                        .filter(split -> split.getUser().equals(addedUser)
                                                                         && split.getRole().equals(
                                                                                         TransactionSplit.Role.PAYER))
 
                                                         .mapToDouble(TransactionSplit::getAmount)
                                                         .sum();
                                         double receiveAmount = transactionSplits.stream()
-                                                        .filter(split -> split.getUser().equals(user)
+                                                        .filter(split -> split.getUser().equals(addedUser)
                                                                         && split.getRole().equals(
                                                                                         TransactionSplit.Role.RECEIVER))
                                                         .mapToDouble(TransactionSplit::getAmount)
@@ -65,7 +68,7 @@ public class SettlementsService {
                                         settlement.setReceiveAmount(receiveAmount);
                                         settlement.setBalanceAmount(balanceAmount);
                                         settlement.setGroup(group);
-                                        settlement.setUser(user);
+                                        settlement.setUser(addedUser);
 
                                         return settlement;
                                 })

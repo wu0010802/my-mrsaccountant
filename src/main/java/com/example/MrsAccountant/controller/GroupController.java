@@ -1,6 +1,9 @@
 package com.example.mrsaccountant.controller;
 
+import java.sql.Time;
+import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -14,10 +17,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.mrsaccountant.entity.Group;
 import com.example.mrsaccountant.entity.User;
+import com.example.mrsaccountant.entity.UserGroup;
 import com.example.mrsaccountant.service.GroupService;
 import com.example.mrsaccountant.service.UserService;
 
@@ -39,7 +44,7 @@ public class GroupController {
 
         User user = userService.getUserById(userId);
 
-        Set<Group> groups = user.getGroups();
+        List<UserGroup> groups = user.getUserGroups();
 
         if (groups.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body("No groups found for the user");
@@ -52,13 +57,14 @@ public class GroupController {
     @GetMapping("/group/users/{groupId}")
     public ResponseEntity<?> getGroupUsers(@PathVariable("groupId") Long groupId) {
         Group retriveGroup = groupService.getGroupByGroupId(groupId);
-        Set<User> userInGroup = retriveGroup.getBelongUsers();
+        List<UserGroup> userInGroup = retriveGroup.getUserGroups();
 
         Set<Map<String, Object>> responseUsers = userInGroup.stream()
                 .map(user -> {
                     Map<String, Object> userMap = new HashMap<>();
-                    userMap.put("userId", user.getUserId());
-                    userMap.put("username", user.getUsername());
+                    userMap.put("userId", user.getUser().getUserId());
+                    userMap.put("username", user.getUser().getUsername());
+                    userMap.put("userRole", user.getRole());
                     return userMap;
                 })
                 .collect(Collectors.toSet());
@@ -68,19 +74,32 @@ public class GroupController {
 
     // 新增群組
     @PostMapping("/user/groups")
-    public ResponseEntity<?> addGroup(
-            @RequestBody Group group,
+    public ResponseEntity<?> addGroupWithRole(
+            @RequestBody Map<String, Object> requestBody,
             @AuthenticationPrincipal Long userId) {
         try {
-
             User user = userService.getUserById(userId);
 
-            if (group == null || group.getGroupName() == null || group.getGroupName().isEmpty()) {
-                return ResponseEntity.badRequest().body("Invalid group data");
+            String groupName = (String) requestBody.get("groupName");
+            String role = (String) requestBody.get("role");
+
+            if (groupName == null || groupName.isEmpty()) {
+                return ResponseEntity.badRequest().body("Invalid group name");
             }
 
-            groupService.addGroup(group, user);
-            return ResponseEntity.status(HttpStatus.CREATED).body("Record added successfully!");
+            UserGroup.GroupRole groupRole;
+            try {
+                groupRole = UserGroup.GroupRole.valueOf(role.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.badRequest().body("Invalid role: " + role);
+            }
+
+            Group group = new Group();
+            group.setGroupName(groupName);
+            groupService.createGroup(group);
+
+            groupService.addGroup(group, user, groupRole);
+            return ResponseEntity.status(HttpStatus.CREATED).body("Record added successfully with role: " + groupRole);
 
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -92,9 +111,12 @@ public class GroupController {
 
     // 加入用戶至指定群組
     @PostMapping("/group/user/{userId}/{groupId}")
-    public ResponseEntity<?> addUserToGroup(@PathVariable("userId") Long userId,
-            @PathVariable("groupId") Long groupId) {
+    public ResponseEntity<?> addUserToGroup(
+            @PathVariable("userId") Long userId,
+            @PathVariable("groupId") Long groupId,
+            @RequestParam(value = "role", required = false, defaultValue = "MEMBER") String role) {
         try {
+
             User addedUser = userService.getUserById(userId);
             if (addedUser == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found with ID: " + userId);
@@ -105,8 +127,16 @@ public class GroupController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Group not found with ID: " + groupId);
             }
 
-            groupService.addGroup(addedGroup, addedUser);
-            return ResponseEntity.ok("User successfully added to the group.");
+            UserGroup.GroupRole groupRole;
+            try {
+                groupRole = UserGroup.GroupRole.valueOf(role.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid role: " + role);
+            }
+
+            groupService.addGroup(addedGroup, addedUser, groupRole);
+
+            return ResponseEntity.ok("User successfully added to the group with role: " + groupRole);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e) {
@@ -114,30 +144,34 @@ public class GroupController {
         }
     }
 
-    @DeleteMapping("/group/user/{userId}/{groupId}")
-    public ResponseEntity<?> deleteGroupUser(
-            @PathVariable("userId") Long userId,
-            @PathVariable("groupId") Long groupId) {
-        try {
-            groupService.deleteGroupUser(groupId, userId);
-            return ResponseEntity
-                    .ok("User with ID: " + userId + " successfully removed from group with ID: " + groupId);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to delete user from group.");
-        }
-    }
+    // 剔除群組中的特定用戶 需加上用戶權限
+    // @DeleteMapping("/group/user/{userId}/{groupId}")
+    // public ResponseEntity<?> deleteGroupUser(
+    // @PathVariable("userId") Long userId,
+    // @PathVariable("groupId") Long groupId) {
+    // try {
+    // groupService.deleteGroupUser(groupId, userId);
+    // return ResponseEntity
+    // .ok("User with ID: " + userId + " successfully removed from group with ID: "
+    // + groupId);
+    // } catch (IllegalArgumentException e) {
+    // return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    // } catch (IllegalStateException e) {
+    // return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    // } catch (Exception e) {
+    // return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed
+    // to delete user from group.");
+    // }
+    // }
 
+    // 用戶離開群組
     @DeleteMapping("/user/groups/{groupId}")
     public ResponseEntity<?> deleteGroup(@PathVariable("groupId") Long groupId,
             @AuthenticationPrincipal Long userId) {
 
         User user = userService.getUserById(userId);
 
-        groupService.removeGroupFromUser(user.getUserId(), groupId);
+        groupService.removeGroupUser(user.getUserId(), groupId);
 
         return ResponseEntity.status(HttpStatus.ACCEPTED)
                 .body("Group deleted successfully!");
