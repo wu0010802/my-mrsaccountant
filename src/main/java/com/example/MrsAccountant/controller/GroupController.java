@@ -1,7 +1,5 @@
 package com.example.mrsaccountant.controller;
 
-import java.sql.Time;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +13,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -38,7 +37,6 @@ public class GroupController {
         this.groupService = groupService;
     }
 
-    // 返回這個用戶有哪些群組
     @GetMapping("/user/groups")
     public ResponseEntity<?> getGroups(@AuthenticationPrincipal Long userId) {
 
@@ -53,7 +51,6 @@ public class GroupController {
         return ResponseEntity.ok(groups);
     }
 
-    // 返回這個群組有哪些用戶
     @GetMapping("/group/users/{groupId}")
     public ResponseEntity<?> getGroupUsers(@PathVariable("groupId") Long groupId) {
         Group retriveGroup = groupService.getGroupByGroupId(groupId);
@@ -72,7 +69,6 @@ public class GroupController {
         return ResponseEntity.ok(responseUsers);
     }
 
-    // 新增群組
     @PostMapping("/user/groups")
     public ResponseEntity<?> addGroupWithRole(
             @RequestBody Map<String, Object> requestBody,
@@ -81,7 +77,7 @@ public class GroupController {
             User user = userService.getUserById(userId);
 
             String groupName = (String) requestBody.get("groupName");
-            String role = (String) requestBody.get("role");
+            String role = "ADMIN";
 
             if (groupName == null || groupName.isEmpty()) {
                 return ResponseEntity.badRequest().body("Invalid group name");
@@ -109,22 +105,33 @@ public class GroupController {
         }
     }
 
-    // 加入用戶至指定群組
     @PostMapping("/group/user/{userId}/{groupId}")
     public ResponseEntity<?> addUserToGroup(
-            @PathVariable("userId") Long userId,
+            @AuthenticationPrincipal Long currentUserId,
+            @PathVariable("userId") Long addedUserId,
             @PathVariable("groupId") Long groupId,
             @RequestParam(value = "role", required = false, defaultValue = "MEMBER") String role) {
         try {
 
-            User addedUser = userService.getUserById(userId);
+            User currentUser = userService.getUserById(currentUserId);
+            if (currentUser == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Current user not found with ID: " + currentUserId);
+            }
+
+            User addedUser = userService.getUserById(addedUserId);
             if (addedUser == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found with ID: " + userId);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found with ID: " + addedUserId);
             }
 
             Group addedGroup = groupService.getGroupByGroupId(groupId);
             if (addedGroup == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Group not found with ID: " + groupId);
+            }
+
+            boolean isAdmin = groupService.isUserAdminOfGroup(currentUserId, groupId);
+            if (!isAdmin) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Only admins can add users to the group.");
             }
 
             UserGroup.GroupRole groupRole;
@@ -144,36 +151,92 @@ public class GroupController {
         }
     }
 
-    // 剔除群組中的特定用戶 需加上用戶權限
-    // @DeleteMapping("/group/user/{userId}/{groupId}")
-    // public ResponseEntity<?> deleteGroupUser(
-    // @PathVariable("userId") Long userId,
-    // @PathVariable("groupId") Long groupId) {
-    // try {
-    // groupService.deleteGroupUser(groupId, userId);
-    // return ResponseEntity
-    // .ok("User with ID: " + userId + " successfully removed from group with ID: "
-    // + groupId);
-    // } catch (IllegalArgumentException e) {
-    // return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-    // } catch (IllegalStateException e) {
-    // return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
-    // } catch (Exception e) {
-    // return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed
-    // to delete user from group.");
-    // }
-    // }
+    // 剔除群組中的特定用戶，需加上用戶權限
+    @DeleteMapping("/group/user/{userId}/{groupId}")
+    public ResponseEntity<?> deleteGroupUser(
+            @PathVariable("userId") Long deleteUserId,
+            @PathVariable("groupId") Long groupId,
+            @AuthenticationPrincipal Long currentUserId) {
+        try {
 
-    // 用戶離開群組
-    @DeleteMapping("/user/groups/{groupId}")
-    public ResponseEntity<?> deleteGroup(@PathVariable("groupId") Long groupId,
-            @AuthenticationPrincipal Long userId) {
+            boolean isAdmin = groupService.isUserAdminOfGroup(currentUserId, groupId);
+            if (!isAdmin) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Only admins can delete users from the group.");
+            }
 
-        User user = userService.getUserById(userId);
+            if (currentUserId.equals(deleteUserId)) {
+                boolean hasOtherAdmins = groupService.hasOtherAdmins(groupId, currentUserId);
+                if (!hasOtherAdmins) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body("Admin must appoint at least one other admin before leaving the group.");
+                }
+            }
 
-        groupService.removeGroupUser(user.getUserId(), groupId);
+            groupService.removeGroupUser(deleteUserId, groupId);
+            return ResponseEntity.ok("User removed from the group successfully.");
 
-        return ResponseEntity.status(HttpStatus.ACCEPTED)
-                .body("Group deleted successfully!");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
+        }
     }
+
+    // 刪除整個群組
+    @DeleteMapping("/user/groups/{groupId}")
+    public ResponseEntity<?> deleteGroup(
+            @PathVariable("groupId") Long groupId,
+            @AuthenticationPrincipal Long userId) {
+        try {
+
+            User user = userService.getUserById(userId);
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found with ID: " + userId);
+            }
+
+            boolean isAdmin = groupService.isUserAdminOfGroup(userId, groupId);
+            if (!isAdmin) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Only admins can delete the group.");
+            }
+
+            groupService.deleteGroup(groupId);
+            return ResponseEntity.status(HttpStatus.ACCEPTED)
+                    .body("Group deleted successfully.");
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
+        }
+    }
+
+    @PutMapping("/group/user/{alteredUserId}/{groupId}")
+    public ResponseEntity<?> alterGroupUserRole(@AuthenticationPrincipal Long currentUserId,
+            @PathVariable Long alteredUserId, @PathVariable Long groupId, @RequestParam String role) {
+
+        boolean isAdmin = groupService.isUserAdminOfGroup(currentUserId, groupId);
+        if (!isAdmin) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Only admins can alter user roles in the group.");
+        }
+
+        UserGroup.GroupRole groupRole;
+        try {
+
+            groupRole = UserGroup.GroupRole.valueOf(role.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid role: " + role);
+        }
+
+        try {
+
+            groupService.alterGroupUserRole(alteredUserId, groupId, groupRole);
+            return ResponseEntity.ok("User role updated successfully to: " + groupRole);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred while updating the user role.");
+        }
+    }
+
 }
