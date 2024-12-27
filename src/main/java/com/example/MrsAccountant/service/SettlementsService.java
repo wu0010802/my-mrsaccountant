@@ -147,7 +147,7 @@ public class SettlementsService {
                                         break;
                                 }
                         }
-                        if (positiveBalances.peek().getValue() < Math.abs(negativeBalances.peek().getValue())) {
+                         if (positiveBalances.peek().getValue() < Math.abs(negativeBalances.peek().getValue())) {
                                 Double replyRemainAmount = Math.abs(positiveBalances.peek().getValue());
                                 negativeBalances.peek().setValue(negativeBalances.peek().getValue()
                                                 + positiveBalances.peek().getValue());

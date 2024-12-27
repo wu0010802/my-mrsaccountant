@@ -1,6 +1,9 @@
 package com.example.mrsaccountant.controller;
 
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,14 +21,19 @@ import com.example.mrsaccountant.dto.GroupTransactionDTO;
 import com.example.mrsaccountant.entity.GroupTransaction;
 import com.example.mrsaccountant.service.GroupTransactionService;
 
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+
 @RestController
 @RequestMapping("/mrsaccountant")
 public class GroupTransactionController {
 
     private final GroupTransactionService groupTransactionService;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    public GroupTransactionController(GroupTransactionService groupTransactionService) {
+    public GroupTransactionController(GroupTransactionService groupTransactionService,
+            SimpMessagingTemplate messagingTemplate) {
         this.groupTransactionService = groupTransactionService;
+        this.messagingTemplate = messagingTemplate;
     }
 
     @GetMapping("/group/transaction")
@@ -40,6 +48,11 @@ public class GroupTransactionController {
             @PathVariable Long groupId) {
         try {
             groupTransactionService.createGroupTransaction(groupTransactionDTO, groupId);
+            Map<String, Object> message = new HashMap<>();
+            message.put("groupId", groupId);
+            message.put("message", "New transaction created");
+            messagingTemplate.convertAndSend("/topic/transactions", message);
+
             return ResponseEntity.ok("GroupTransaction created successfully");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid data: " + e.getMessage());
@@ -76,5 +89,7 @@ public class GroupTransactionController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to delete GroupTransaction.");
         }
     }
+
+
 
 }

@@ -5,6 +5,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import com.example.mrsaccountant.dto.GroupTransactionDTO;
@@ -12,7 +14,7 @@ import com.example.mrsaccountant.dto.TransactionSplitDTO;
 import com.example.mrsaccountant.entity.Group;
 import com.example.mrsaccountant.entity.GroupTransaction;
 import com.example.mrsaccountant.entity.TransactionSplit;
-
+import com.example.mrsaccountant.entity.UserGroup;
 import com.example.mrsaccountant.entity.TransactionSplit.Role;
 import com.example.mrsaccountant.repository.GroupTransactionRespository;
 import com.example.mrsaccountant.entity.Record;
@@ -43,6 +45,7 @@ public class GroupTransactionService {
     }
 
     public void createGroupTransaction(GroupTransactionDTO groupTransactionDTO, Long groupId) {
+
         if (!isTransactionBalanced(groupTransactionDTO)) {
             throw new IllegalArgumentException("Transaction amounts are not balanced.");
         }
@@ -50,6 +53,8 @@ public class GroupTransactionService {
         if (group == null) {
             throw new IllegalArgumentException("Group not found with ID: " + groupId);
         }
+
+        validateGroupTransaction(group, groupTransactionDTO);
 
         GroupTransaction groupTransaction = new GroupTransaction();
         groupTransaction.setAmount(groupTransactionDTO.getAmount());
@@ -179,22 +184,43 @@ public class GroupTransactionService {
         settlementsService.addSettlementByGroupId(groupId);
     }
 
-
     public boolean isTransactionBalanced(GroupTransactionDTO transactionDTO) {
 
-    double payerTotal = transactionDTO.getTransactionSplits().stream()
-            .filter(split -> "PAYER".equalsIgnoreCase(split.getRole()))
-            .mapToDouble(TransactionSplitDTO::getAmount)
-            .sum();
+        double payerTotal = transactionDTO.getTransactionSplits().stream()
+                .filter(split -> "PAYER".equalsIgnoreCase(split.getRole()))
+                .mapToDouble(TransactionSplitDTO::getAmount)
+                .sum();
 
+        double receiverTotal = transactionDTO.getTransactionSplits().stream()
+                .filter(split -> "RECEIVER".equalsIgnoreCase(split.getRole()))
+                .mapToDouble(TransactionSplitDTO::getAmount)
+                .sum();
+
+        return payerTotal == receiverTotal && transactionDTO.getAmount().equals(payerTotal);
+    }
+
+    public void validateGroupTransaction(Group group, GroupTransactionDTO groupTransactionDTO) {
+
+        if (group == null || groupTransactionDTO == null) {
+            throw new IllegalArgumentException("Group or transaction data cannot be null");
+        }
+        List<UserGroup> groupUserList = Optional.ofNullable(group.getUserGroups())
+                .orElseThrow(() -> new IllegalArgumentException("Group has no members"));
+
+        List<Long> groupUserIdList = groupUserList.stream()
+                .map(groupUser -> groupUser.getUser().getUserId())
+                .collect(Collectors.toList());
  
-    double receiverTotal = transactionDTO.getTransactionSplits().stream()
-            .filter(split -> "RECEIVER".equalsIgnoreCase(split.getRole()))
-            .mapToDouble(TransactionSplitDTO::getAmount)
-            .sum();
+        List<Long> transactionUserIdList = groupTransactionDTO.getTransactionSplits().stream()
+                .map(split->split.getUserId())
+                .collect(Collectors.toList());
 
-    
-    return payerTotal == receiverTotal && transactionDTO.getAmount().equals(payerTotal);
-}
+        if (!groupUserIdList.containsAll(transactionUserIdList)
+                || !transactionUserIdList.containsAll(groupUserIdList)) {
+            throw new IllegalArgumentException("Group member IDs and transaction split IDs do not match");
+        }
+
+      
+    }
 
 }
