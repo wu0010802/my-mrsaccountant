@@ -94,7 +94,7 @@ public class Record {
     }
 
     public enum Type {
-        INCOME, EXPENSE
+        INCOME, EXPENSE,TRANSFER
     }
 
     public TransactionSplit getTransactionSplit() {

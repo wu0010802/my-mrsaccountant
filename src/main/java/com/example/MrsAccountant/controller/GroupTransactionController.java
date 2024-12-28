@@ -51,7 +51,7 @@ public class GroupTransactionController {
             Map<String, Object> message = new HashMap<>();
             message.put("groupId", groupId);
             message.put("message", "New transaction created");
-            messagingTemplate.convertAndSend("/topic/transactions", message);
+            messagingTemplate.convertAndSend("/topic/transactions", groupTransactionDTO);
 
             return ResponseEntity.ok("GroupTransaction created successfully");
         } catch (IllegalArgumentException e) {

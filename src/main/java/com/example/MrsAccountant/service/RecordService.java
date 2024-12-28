@@ -2,10 +2,13 @@ package com.example.mrsaccountant.service;
 
 import java.util.List;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.example.mrsaccountant.entity.Record;
 import com.example.mrsaccountant.repository.RecordRepository;
 
 @Service
+@Transactional
 public class RecordService {
 
     private final RecordRepository recordRepository;
