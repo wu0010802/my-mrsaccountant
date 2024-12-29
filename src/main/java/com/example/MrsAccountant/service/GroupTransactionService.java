@@ -2,7 +2,6 @@ package com.example.mrsaccountant.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,7 +73,7 @@ public class GroupTransactionService {
             split.setUser(userService.getUserById(splitDTO.getUserId()));
             split.setGroupTransaction(groupTransaction);
 
-            if (split.getRole().equals(TransactionSplit.Role.RECEIVER)&& groupTransactionDTO.getType().equals(GroupTransaction.Type.EXPENSE)) {
+            if (split.getRole().equals(TransactionSplit.Role.RECEIVER)&& groupTransactionDTO.getType().equals(GroupTransaction.Type.EXPENSE.toString())) {
                 Record syncRecord = new Record();
                 syncRecord.setAmount(split.getAmount());
                 syncRecord.setCategory(groupTransaction.getCategory());

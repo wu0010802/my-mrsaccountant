@@ -37,18 +37,17 @@ public class SettlementsService {
                 Group group = groupService.getGroupByGroupId(groupId);
                 List<GroupTransaction> transactions = group.getGroupTransactions();
                 List<UserGroup> users = group.getUserGroups();
-                 
-
 
                 List<TransactionSplit> transactionSplits = transactions.stream()
-                                .filter(transaction -> transaction.getType().equals(GroupTransaction.Type.EXPENSE))
+                                .filter(transaction -> transaction.getType().equals(GroupTransaction.Type.EXPENSE) ||
+                                                transaction.getType().equals(GroupTransaction.Type.TRANSFER))
                                 .flatMap(transaction -> transaction.getTransactionSplits().stream())
                                 .collect(Collectors.toList());
 
                 List<Settlement> setttlements = users.stream()
                                 .map(user -> {
                                         Settlement settlement = new Settlement();
-                                        User addedUser  = user.getUser();
+                                        User addedUser = user.getUser();
                                         double payAmount = transactionSplits.stream()
                                                         .filter(split -> split.getUser().equals(addedUser)
                                                                         && split.getRole().equals(
@@ -84,8 +83,6 @@ public class SettlementsService {
                 return settlementRepository.findByGroupId(groupId);
 
         }
-
-
 
         public List<SettlementStatusDTO> replySettlement(Long groupId) {
 
@@ -148,7 +145,7 @@ public class SettlementsService {
                                         break;
                                 }
                         }
-                         if (positiveBalances.peek().getValue() < Math.abs(negativeBalances.peek().getValue())) {
+                        if (positiveBalances.peek().getValue() < Math.abs(negativeBalances.peek().getValue())) {
                                 Double replyRemainAmount = Math.abs(positiveBalances.peek().getValue());
                                 negativeBalances.peek().setValue(negativeBalances.peek().getValue()
                                                 + positiveBalances.peek().getValue());

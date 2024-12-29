@@ -40,8 +40,8 @@ paths:
                       groupId: 6
         "204":
           description: No groups found for the user.
-        default:
-          description: An error occurred while retrieving user groups.
+        "500":
+          description: Internal server error.
       tags:
         - User Groups
     post:
@@ -70,10 +70,45 @@ paths:
                 example: Group added successfully!
         "400":
           description: Invalid group data provided.
-        default:
-          description: An error occurred while creating the group.
+        "500":
+          description: Internal server error.
       tags:
         - User Groups
+
+  /mrsaccountant/group/users/{groupId}:
+    get:
+      summary: Retrieve all users in a group
+      description: Fetches all users associated with the specified group.
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          description: The ID of the group.
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: A list of users in the group.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    userId:
+                      type: integer
+                    username:
+                      type: string
+                    userRole:
+                      type: string
+                      enum: [ADMIN, MEMBER, VISITOR]
+        "404":
+          description: Group not found.
+        "500":
+          description: Internal server error.
+      tags:
+        - User Management
 
   /group/user/{userId}/{groupId}:
     post:
@@ -83,50 +118,129 @@ paths:
         - name: userId
           in: path
           required: true
-          description: ID of the user to be added to the group
+          description: ID of the user to be added to the group.
           schema:
             type: integer
         - name: groupId
           in: path
           required: true
-          description: ID of the group to which the user will be added
+          description: ID of the group to which the user will be added.
           schema:
             type: integer
+        - name: role
+          in: query
+          required: false
+         
+          schema:
+            type: string
+            enum: [ADMIN, MEMBER, VISITOR]
       responses:
         "200":
-          description: User successfully added to the group
+          description: User successfully added to the group.
           content:
             application/json:
               schema:
                 type: string
                 example: "User successfully added to the group."
         "400":
-          description: Invalid input
-          content:
-            application/json:
-              schema:
-                type: string
-                example: "Invalid input data"
+          description: Invalid input data.
         "404":
-          description: User or Group not found
-          content:
-            application/json:
-              schema:
-                type: string
-                examples:
-                  UserNotFound:
-                    summary: User not found
-                    value: "User not found with ID: {userId}"
-                  GroupNotFound:
-                    summary: Group not found
-                    value: "Group not found with ID: {groupId}"
+          description: User or Group not found.
+        "403":
+          description: Forbidden. Only admins can add users to the group.
         "500":
-          description: Unexpected error
-          content:
-            application/json:
-              schema:
-                type: string
-                example: "An unexpected error occurred."
+          description: Internal server error.
+      tags:
+        - User Management
+
+    delete:
+      summary: Remove a user from a group
+      description: Removes a specified user from a group by their IDs.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: ID of the user to be removed from the group.
+          schema:
+            type: integer
+        - name: groupId
+          in: path
+          required: true
+          description: ID of the group.
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User removed from the group successfully.
+        "400":
+          description: Invalid input data.
+        "403":
+          description: Forbidden. Only admins can remove users from the group.
+        "404":
+          description: User or Group not found.
+        "500":
+          description: Internal server error.
+      tags:
+        - User Management
+
+  /mrsaccountant/user/groups/{groupId}:
+    delete:
+      summary: Delete a group
+      description: Deletes a group by its ID.
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          description: The ID of the group to delete.
+          schema:
+            type: integer
+      responses:
+        "202":
+          description: Group deleted successfully.
+        "403":
+          description: Forbidden. Only admins can delete the group.
+        "404":
+          description: Group not found.
+        "500":
+          description: Internal server error.
+      tags:
+        - User Groups
+
+  /group/user/{alteredUserId}/{groupId}:
+    put:
+      summary: Update a user's role in a group
+      description: Updates the role of a specified user in a group.
+      parameters:
+        - name: alteredUserId
+          in: path
+          required: true
+          description: ID of the user whose role will be updated.
+          schema:
+            type: integer
+        - name: groupId
+          in: path
+          required: true
+          description: ID of the group.
+          schema:
+            type: integer
+        - name: role
+          in: query
+          required: true
+          description: New role of the user in the group.
+          schema:
+            type: string
+            enum: [ADMIN, MEMBER, VISITOR]
+      responses:
+        "200":
+          description: User role updated successfully.
+        "400":
+          description: Invalid role provided.
+        "403":
+          description: Forbidden. Only admins can alter user roles in the group.
+        "404":
+          description: User or Group not found.
+        "500":
+          description: Internal server error.
       tags:
         - User Management
 
@@ -515,3 +629,4 @@ paths:
           description: An error occurred while retrieving settlement details.
       tags:
         - Settlements
+
