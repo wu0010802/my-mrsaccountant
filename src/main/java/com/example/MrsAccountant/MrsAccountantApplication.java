@@ -14,8 +14,7 @@ public class MrsAccountantApplication {
             activeProfile = "dev";
         }
 
-        System.out.println("Active Profile: " + activeProfile);
-
+       
         if (!activeProfile.equals("prod")) {
             Dotenv dotenv = Dotenv.load();
             dotenv.entries().forEach(entry -> {
