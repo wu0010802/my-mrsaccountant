@@ -62,7 +62,7 @@ public class GroupService {
         userGroupId.setGroupId(groupId);
         userGroupId.setUserId(currentUserId);
         
-        // 使用 Optional 的方法避免顯式捕捉異常
+        
         return userGroupRepository.findById(userGroupId)
                 .map(userGroup -> userGroup.getRole() == UserGroup.GroupRole.ADMIN)
                 .orElse(false);

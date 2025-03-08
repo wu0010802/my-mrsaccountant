@@ -133,6 +133,8 @@ public class SettlementsService {
 
                                 negativeBalances.peek().setValue(0.0);
 
+
+
                                 SettlementStatusDTO settlementStatus = new SettlementStatusDTO(
                                                 negativeBalances.peek().getKey().getUsername(),
                                                 positiveBalances.peek().getKey().getUsername(),

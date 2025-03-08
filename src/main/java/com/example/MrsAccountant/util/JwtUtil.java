@@ -20,7 +20,7 @@ public class JwtUtil {
     @Value("${jwt.expiration}")
     private long expiration;
 
-    private static final int MIN_SECRET_LENGTH = 64; // HS512 至少需要 512 位（64 字節）
+    private static final int MIN_SECRET_LENGTH = 64; 
 
     private Key getSigningKey() {
         if (secret.length() < MIN_SECRET_LENGTH) {
@@ -50,7 +50,7 @@ public class JwtUtil {
                 .parseClaimsJws(token);
             return true;
         } catch (Exception e) {
-            // 在此記錄詳細的錯誤信息（可選）
+        
             System.err.println("Token validation failed: " + e.getMessage());
             return false;
         }

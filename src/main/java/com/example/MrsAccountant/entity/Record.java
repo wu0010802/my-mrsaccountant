@@ -4,11 +4,12 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "records")
+@Table(name = "records",indexes = {@Index(name = "record_user_id_key", columnList = "id", unique = true)})
 public class Record {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER)
