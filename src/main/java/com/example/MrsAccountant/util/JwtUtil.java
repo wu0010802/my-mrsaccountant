@@ -14,6 +14,7 @@ import java.util.Date;
 @Component
 public class JwtUtil {
     // main test first
+    // refactor test first 
     @Value("${jwt.secret}")
     private String secret;
 
