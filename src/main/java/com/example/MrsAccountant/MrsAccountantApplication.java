@@ -9,8 +9,7 @@ import io.github.cdimascio.dotenv.Dotenv;
 
 @SpringBootApplication
 public class MrsAccountantApplication {
-    // test rebase main
-// test rebase feature a
+// test feature merge toi= mian
     public static void main(String[] args) {
 
         String activeProfile = System.getenv("SPRING_PROFILES_ACTIVE");
